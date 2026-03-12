@@ -1,3 +1,11 @@
+<p align="center">
+  <img src="assets/shotkit-banner.png" width="100%" alt="Shotkit banner" />
+</p>
+
+<p align="center">
+  <img src="assets/shotkit-logo.png" width="100" alt="Shotkit logo" />
+</p>
+
 # withnico-skills
 
 Open source Claude Code agent skills for iOS developers and content creators on Mac.
