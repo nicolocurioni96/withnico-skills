@@ -1,280 +1,147 @@
-# 🏥 Project Clinic AI
+# withnico-skills
 
-> AI-powered clinic management system built on Mac Mini + OpenClaw + GoHighLevel.  
-> Automates lead tracking, performance monitoring, and content strategy for aesthetic medicine clinics — with real-time alerts via Telegram and Discord.
+Open source Claude Code agent skills for iOS developers and content creators on Mac.
 
----
-
-## 📚 Documentation Index
-
-| Section | File | Description |
-|---------|------|-------------|
-| **Hardware** | [01-hardware/specs.md](./01-hardware/specs.md) | Mac Mini vs Mac Studio, RAM guide, remote access |
-| **Setup** | [02-setup/macos-setup.md](./02-setup/macos-setup.md) | macOS base config, Homebrew, system dependencies |
-| | [02-setup/exo-setup.md](./02-setup/exo-setup.md) | Exo — local LLM inference engine |
-| | [02-setup/openclaw-setup.md](./02-setup/openclaw-setup.md) | OpenClaw — install and configure |
-| **AI Config** | [03-ai-config/claude-api.md](./03-ai-config/claude-api.md) | Claude API on OpenClaw — setup and tuning |
-| | [03-ai-config/local-llm.md](./03-ai-config/local-llm.md) | ⭐ Local LLMs — zero cost setup, models, routing |
-| **Integrations** | [04-integrations/gohighlevel.md](./04-integrations/gohighlevel.md) | GoHighLevel CRM — API, webhooks, data |
-| | [04-integrations/telegram-bot.md](./04-integrations/telegram-bot.md) | Telegram — alerts, notifications, commands |
-| | [04-integrations/imessage-setup.md](./04-integrations/imessage-setup.md) | iMessage — setup and use cases |
-| | [04-integrations/discord-setup.md](./04-integrations/discord-setup.md) | Discord — channel structure, webhooks, team |
-| **CRM** | [05-crm/leads-management.md](./05-crm/leads-management.md) | Leads — pipeline, tagging, scoring |
-| | [05-crm/automation-flows.md](./05-crm/automation-flows.md) | Automations — triggers, actions, sequences |
-| | [05-crm/calls-management.md](./05-crm/calls-management.md) | Calls — log, follow-up, analysis |
-| **Skills** | [06-skills/skills-overview.md](./06-skills/skills-overview.md) | All OpenClaw skills map |
-| | [06-skills/ghl-monitor.md](./06-skills/ghl-monitor.md) | Skill: daily CRM monitor |
-| | [06-skills/performance-alert.md](./06-skills/performance-alert.md) | Skill: performance drop alerts |
-| | [06-skills/content-strategy.md](./06-skills/content-strategy.md) | Skill: editorial plan and Reels scripts |
-| | [06-skills/ads-review.md](./06-skills/ads-review.md) | Skill: ad campaigns review |
-| **Notifications** | [07-notifications/alerts-system.md](./07-notifications/alerts-system.md) | Alert system — thresholds, priority, channels |
-| | [07-notifications/report-templates.md](./07-notifications/report-templates.md) | Message templates for Telegram and Discord |
-| **Scaling** | [08-scaling/scaling-guide.md](./08-scaling/scaling-guide.md) | When and how to scale — future scenarios |
-| **Troubleshooting** | [09-troubleshooting/common-issues.md](./09-troubleshooting/common-issues.md) | Common problems and fixes |
-
-📋 **Quick Reference:** [QUICK-REFERENCE.md](./QUICK-REFERENCE.md)
+Built by [Nicolò Curioni](https://withnico.com) — [@nicolocurioni96](https://github.com/nicolocurioni96)
 
 ---
 
-## 🏗️ System Architecture
+## Install
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                            PROJECT CLINIC AI                                  │
-└──────────────────────────────────────────────────────────────────────────────┘
-
-  EXTERNAL DATA SOURCES
-  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-  │ GoHighLevel  │     │  Meta Ads    │     │  Google Ads  │
-  │  CRM/Leads   │     │  Campaigns   │     │  Campaigns   │
-  └──────┬───────┘     └──────┬───────┘     └──────┬───────┘
-         │ API                │ API                 │ API
-         └────────────────────┴─────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        MAC MINI M4 Pro (24/7)                                │
-│                                                                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                           OPENCLAW                                   │    │
-│  │   ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐    │    │
-│  │   │   Skills    │    │   Memory    │    │  Scheduler (cron)   │    │    │
-│  │   │   Layer     │    │   Context   │    │  08:00 · 12:00      │    │    │
-│  │   │             │    │             │    │  18:00 · Mon 09:00  │    │    │
-│  │   └─────────────┘    └─────────────┘    └─────────────────────┘    │    │
-│  └──────────────────────────────┬──────────────────────────────────────┘    │
-│                                  │                                            │
-│              ┌───────────────────┼───────────────────┐                       │
-│              │                   │                   │                       │
-│              ▼                   ▼                   ▼                       │
-│  ┌───────────────────┐  ┌────────────────┐  ┌──────────────────────────┐   │
-│  │   AI ROUTING      │  │  EXO (local)   │  │     File System          │   │
-│  │   LAYER           │  │                │  │                          │   │
-│  │                   │  │ Llama 3.3 70B  │  │  ~/openclaw-workspace/   │   │
-│  │  Task leggero? ───┼─►│ Mistral 22B    │  │  /data    /skills        │   │
-│  │       │           │  │ Llama 3.1 8B   │  │  /reports /content       │   │
-│  │  Task complesso?  │  │                │  │  /config                 │   │
-│  │       │           │  │ GRATIS ✅      │  │                          │   │
-│  │       ▼           │  └────────────────┘  └──────────────────────────┘   │
-│  │  ┌────────────┐   │                                                       │
-│  │  │ Claude API │   │  ← usato solo come fallback o per web search         │
-│  │  │  (cloud)   │   │                                                       │
-│  │  │ ~€2-5/mese │   │                                                       │
-│  │  └────────────┘   │                                                       │
-│  └───────────────────┘                                                       │
-└─────────────────────────────────────────────────────────────────────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-  │   Telegram   │   │   iMessage   │   │   Discord    │
-  │  (primary)   │   │  (secondary) │   │ (team/logs)  │
-  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘
-         └───────────────────┴───────────────────┘
-                             │
-                             ▼
-                    ┌──────────────┐
-                    │     YOU      │
-                    │  (iPhone /   │
-                    │  anywhere)   │
-                    └──────────────┘
-```
-
----
-
-## 🧠 AI Routing — Zero Cost Strategy
-
-The system uses a **3-level routing logic** to minimize API costs while maintaining quality:
-
-```
-TASK ARRIVES
-     │
-     ├─► Simple task (classify, tag, count, extract)
-     │         └─► Llama 3.1 8B  — local, instant, FREE
-     │
-     ├─► Standard task (analyze, report, write, review)
-     │         └─► Llama 3.3 70B — local, ~8 tok/s, FREE
-     │
-     ├─► Local offline / slow response
-     │         └─► Claude Sonnet  — cloud fallback, ~€0.003/1k tokens
-     │
-     └─► Extraordinary task (annual strategy, full audit)
-               └─► Claude Opus   — cloud, ~€0.015/1k tokens (1x/month)
-```
-
-| Model | Where | RAM | Quality (IT) | Cost |
-|-------|-------|-----|-------------|------|
-| Llama 3.3 70B Q4 | Local | 40 GB | ⭐⭐⭐⭐⭐ | **Free** |
-| Qwen 2.5 72B Q4 | Local | 40 GB | ⭐⭐⭐⭐⭐ | **Free** |
-| Mistral 22B | Local | 14 GB | ⭐⭐⭐⭐ | **Free** |
-| Llama 3.1 8B | Local | 6 GB | ⭐⭐⭐ | **Free** |
-| Claude Sonnet | Cloud | — | ⭐⭐⭐⭐⭐ | ~€20–50/mo |
-| Claude Opus | Cloud | — | ⭐⭐⭐⭐⭐ | ~€60–100/mo |
-
-→ Full setup guide: [03-ai-config/local-llm.md](./03-ai-config/local-llm.md)
-
----
-
-## 💰 Stack and Costs
-
-### Standard Setup (24GB RAM — Claude API primary)
-
-| Service | Purpose | Cost |
-|---------|---------|------|
-| **Mac Mini M4 Pro 24GB** | AI worker hardware | ~€1,400 one-time |
-| **OpenClaw** | AI agent framework | Free |
-| **Exo + Llama 3.1 8B** | Local LLM for light tasks | Free |
-| **Claude API** | AI brain for complex tasks | ~€20–50/month |
-| **GoHighLevel** | CRM + automations | ~€97/month |
-| **Telegram Bot** | Primary notifications | Free |
-| **Discord** | Team + logs | Free |
-| **Google Workspace** | Docs + Drive | ~€6/month |
-
-**Monthly: ~€130–160/month**
-
----
-
-### Zero-Cost Setup (48GB RAM — Local LLM primary)
-
-| Service | Purpose | Cost |
-|---------|---------|------|
-| **Mac Mini M4 Pro 48GB** | AI worker hardware | ~€1,800 one-time |
-| **OpenClaw** | AI agent framework | Free |
-| **Exo + Llama 3.3 70B** | Local LLM for ALL tasks | **Free** |
-| **Claude API** | Fallback only (~5% of tasks) | ~€2–5/month |
-| **GoHighLevel** | CRM + automations | ~€97/month |
-| **Telegram Bot** | Primary notifications | Free |
-| **Discord** | Team + logs | Free |
-| **Google Workspace** | Docs + Drive | ~€6/month |
-
-**Monthly: ~€108–115/month** — save ~€40/month vs standard, payback in ~10 months on RAM upgrade
-
----
-
-## 🔄 Daily Operational Flow
-
-```
-08:00           →  GHL Monitor       →  Morning report on Telegram
-12:00           →  Silent check      →  Notify only if anomaly
-18:00           →  Silent check      →  Notify only if anomaly
-Real-time       →  New lead in GHL   →  Instant notify + auto-tag + score
-Monday 09:00    →  Weekly report     →  PDF on Google Drive + Telegram link
-Wednesday 09:00 →  Content          →  Reels scripts draft for review
-```
-
----
-
-## 🗂️ Repository Structure
-
-```
-project-clinic-ai/
-│
-├── README.md                        ← You are here
-├── QUICK-REFERENCE.md               ← Quick commands and shortcuts
-├── .gitignore
-│
-├── 01-hardware/
-│   └── specs.md
-│
-├── 02-setup/
-│   ├── macos-setup.md
-│   ├── exo-setup.md
-│   └── openclaw-setup.md
-│
-├── 03-ai-config/
-│   ├── claude-api.md                ← Cloud AI setup
-│   └── local-llm.md                 ← ⭐ Zero-cost local AI setup
-│
-├── 04-integrations/
-│   ├── gohighlevel.md
-│   ├── telegram-bot.md
-│   ├── imessage-setup.md
-│   └── discord-setup.md
-│
-├── 05-crm/
-│   ├── leads-management.md
-│   ├── automation-flows.md
-│   └── calls-management.md
-│
-├── 06-skills/
-│   ├── skills-overview.md
-│   ├── ghl-monitor.md
-│   ├── performance-alert.md
-│   ├── content-strategy.md
-│   └── ads-review.md
-│
-├── 07-notifications/
-│   ├── alerts-system.md
-│   └── report-templates.md
-│
-├── 08-scaling/
-│   └── scaling-guide.md
-│
-├── 09-troubleshooting/
-│   └── common-issues.md
-│
-├── 10-config/
-│   ├── integrations.example.json
-│   └── thresholds.example.json
-│
-└── 11-scripts/
-    ├── setup.sh
-    └── healthcheck.sh
-```
-
----
-
-## 🚀 Getting Started
-
+Install all skills at once:
 ```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/project-clinic-ai.git
-cd project-clinic-ai
+npx ai-agent-skills install nicolocurioni96/withnico-skills
+```
 
-# 2. Copy config templates
-cp 10-config/integrations.example.json ~/openclaw-workspace/config/integrations.json
-cp 10-config/thresholds.example.json ~/openclaw-workspace/config/thresholds.json
+Install a single skill:
+```bash
+npx ai-agent-skills install nicolocurioni96/withnico-skills --skill app-screenshot-studio
+```
 
-# 3. Fill in your API keys
-nano ~/openclaw-workspace/config/integrations.json
+Or register as a Claude Code plugin:
+```
+/plugin install withnico-skills@nicolocurioni96
+```
 
-# 4. Run Mac Mini setup
-chmod +x 11-scripts/setup.sh && ./11-scripts/setup.sh
+Works with **Claude Code**, **Cursor**, **Codex**, **Gemini CLI**, **OpenCode**, and any agent following the [Agent Skills open standard](https://agentskills.io).
 
-# 5. Health check
-./11-scripts/healthcheck.sh
+---
+
+## Skills
+
+| Skill | What it does | Platform | Status |
+|-------|-------------|----------|--------|
+| [app-screenshot-studio](./skills/app-screenshot-studio/) | End-to-end App Store screenshot pipeline: Simulator capture → 5 templates → multi-locale compositing → ASC-ready output | macOS | ✅ Ready |
+
+More skills coming — see [Roadmap](#roadmap).
+
+---
+
+## app-screenshot-studio
+
+The full App Store screenshot workflow in one Claude Code skill.
+
+**Trigger phrases:**
+- "create my App Store screenshots"
+- "generate screenshots for my app"
+- "design screenshot templates"
+- "capture simulator screenshots"
+- "build my App Store creatives"
+
+**What it does:**
+
+1. **Capture** — pulls raw UI from Xcode Simulator via `xcrun simctl`, interactively screen by screen
+2. **Copy** — generates locale-aware headlines (max 30 chars) + sublines (max 60 chars) per screenshot
+3. **Composite** — renders styled images using Pillow with 5 template styles
+4. **Organize** — outputs an ASC-ready folder structure, validates dimensions, generates upload checklist
+
+**5 Template Styles:**
+
+| Template | Best For | Style |
+|----------|---------|-------|
+| `minimal` | Productivity, utilities, finance | White bg, shadow device, clean text below |
+| `bold` | Games, lifestyle, fitness | Full-bleed gradient, large text at top |
+| `dark` | Pro tools, music, photography | Black bg, colored glow, premium feel |
+| `editorial` | Creative, travel, shopping | Split layout, magazine composition |
+| `flat` | Photo/video, maps, AR | Full-bleed UI, semi-transparent text bar |
+
+**Device support (2025/2026):**
+- iPhone 6.9" — 1320 × 2868 px ✅ mandatory
+- iPhone 6.7" — 1290 × 2796 px
+- iPhone 6.5" — 1242 × 2688 px
+- iPad 13" — 2064 × 2752 px ✅ mandatory (if iPad)
+- iPad 12.9" — 2048 × 2732 px
+
+**Locale support:**
+en-US, it, de, ja, fr, es, pt-BR, ko — tone-adapted per market.
+
+**Requirements:**
+- macOS only
+- Xcode installed (for Simulator capture)
+- Python 3.8+ (auto-detected)
+- Pillow (auto-installed by skill)
+
+**Quick start:**
+```bash
+# 1. Install deps
+bash skills/app-screenshot-studio/scripts/install_deps.sh
+
+# 2. Capture from Simulator
+bash skills/app-screenshot-studio/scripts/capture_simulator.sh com.yourapp.bundleid ./raw
+
+# 3. Generate screenshots
+python3 skills/app-screenshot-studio/scripts/generate_screenshots.py \
+  --app-name "YourApp" \
+  --captures ./raw \
+  --copy ./skills/app-screenshot-studio/references/copy_example.json \
+  --template bold \
+  --devices iphone-6.9 ipad-13 \
+  --locales en-US it \
+  --output ./screenshots-output
+
+# 4. Validate
+python3 skills/app-screenshot-studio/scripts/validate_output.py --dir ./screenshots-output
 ```
 
 ---
 
-## 📅 Changelog
+## Roadmap
 
-| Date | Version | Change |
-|------|---------|--------|
-| 2026-02-19 | v1.2 | Added zero-cost local AI architecture and routing layer |
-| 2026-02-19 | v1.1 | Added department structure and node architecture |
-| 2026-02-19 | v1.0 | Initial release |
+| Skill | What it will do |
+|-------|----------------|
+| `xcode-release-notes` | git log → App Store What's New copy in multiple languages |
+| `ios-localization` | Localize App Store metadata for 28+ territories intelligently |
+| `transcript-recycler` | YouTube URL → full content repurposing pack |
+| `youtube-package` | One brief → complete bilingual YouTube video content package |
+| `apple-notes-agent` | Create, search, and manage Apple Notes from Claude Code |
+| `swift-review` | SwiftUI and iOS-specific code review: architecture, App Store compliance |
 
 ---
 
-*Project Clinic AI — WithNico / Nicolò Curioni © 2026*
+## Contributing
+
+PRs welcome. Each skill lives in `skills/<skill-name>/` with:
+```
+skills/my-skill/
+├── SKILL.md
+├── scripts/
+└── references/
+```
+
+Follow the [Agent Skills open standard](https://agentskills.io) for `SKILL.md` format.
+
+---
+
+## License
+
+MIT — see [LICENSE](./LICENSE)
+
+---
+
+## Author
+
+Nicolò Curioni — [withnico.com](https://withnico.com) · [@nicolocurioni96](https://github.com/nicolocurioni96)
+
+iOS Engineer · AI Evangelist · Indie Developer · Content Creator
+
+Discord: https://discord.gg/JXgrVwqa8b
