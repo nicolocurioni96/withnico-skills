@@ -2,7 +2,7 @@
 
 Open source Claude Code agent skills for iOS developers and content creators on Mac.
 
-Built by [Nicolò Curioni](https://withnico.com) — [@nicolocurioni96](https://github.com/nicolocurioni96)
+Built by [Nicolò Curioni](https://withnico.com) 🔸 — [@nicolocurioni96](https://github.com/nicolocurioni96)
 
 ---
 
