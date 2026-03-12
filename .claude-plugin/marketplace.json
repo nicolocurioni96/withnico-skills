@@ -4,10 +4,10 @@
   },
   "plugins": [
     {
-      "name": "app-screenshot-studio",
-      "source": "app-screenshot-studio",
+      "name": "shotkit",
+      "source": "shotkit",
       "description": "End-to-end App Store screenshot pipeline: Simulator capture, 5 template styles, multi-locale copy, and ASC-ready output.",
-      "skills": ["./skills/app-screenshot-studio"]
+      "skills": ["./skills/shotkit"]
     }
   ]
 }

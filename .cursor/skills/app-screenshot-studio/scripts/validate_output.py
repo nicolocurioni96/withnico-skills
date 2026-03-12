@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-app-screenshot-studio — Output Validator
+shotkit — Output Validator
 Checks all generated screenshots against App Store Connect requirements.
 
 Usage:
@@ -63,7 +63,7 @@ def validate(output_dir):
                 else:
                     passed += 1
     print(f"\n{'─'*50}")
-    print(f"App Screenshot Studio — Validation Report")
+    print(f"Shotkit — Validation Report")
     print(f"{'─'*50}")
     print(f"Total checked : {total}")
     print(f"Passed        : {passed}")

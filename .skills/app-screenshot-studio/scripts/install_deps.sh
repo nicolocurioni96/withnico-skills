@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "📦 Installing app-screenshot-studio dependencies..."
+echo "📦 Installing shotkit dependencies..."
 if ! command -v python3 &>/dev/null; then
   echo "❌ Python 3 not found. Install via: brew install python3"
   exit 1

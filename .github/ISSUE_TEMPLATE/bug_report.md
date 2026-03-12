@@ -7,7 +7,7 @@ assignees: nicolocurioni96
 ---
 
 **Skill affected**
-e.g. app-screenshot-studio
+e.g. shotkit
 
 **What happened**
 A clear description of the bug.

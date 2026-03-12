@@ -1,5 +1,5 @@
 ---
-name: app-screenshot-studio
+name: shotkit
 description: Autonomously generate, design, and organize App Store screenshots for iOS and iPadOS apps. Use this skill whenever a developer asks to create App Store screenshots, generate screenshot assets, design screenshot templates, capture simulator screens, produce localized screenshots, or organize screenshots by device size. Triggers on phrases like "create my App Store screenshots", "generate screenshots for my app", "make screenshot assets", "design screenshot templates", "capture simulator screenshots", "build my App Store creatives". This skill handles the FULL pipeline end-to-end: capturing raw UI from the Xcode Simulator → generating styled composites with text overlays → organizing output into ASC-ready folder structure. Always use this skill when any part of the App Store screenshot workflow is mentioned.
 compatibility:
   platform: macOS only
@@ -9,7 +9,7 @@ compatibility:
     - xcrun (bundled with Xcode)
 ---
 
-# App Screenshot Studio
+# Shotkit
 
 End-to-end App Store screenshot pipeline for indie iOS developers. From raw Simulator capture to upload-ready assets organized by device, locale, and template style.
 
@@ -65,10 +65,10 @@ Ask the developer for the following (or infer from context if already provided):
 
 ### Step 2 — Install Dependencies
 ```bash
-cat > "$REPO/skills/app-screenshot-studio/scripts/install_deps.sh" << 'EOF'
+cat > "$REPO/skills/shotkit/scripts/install_deps.sh" << 'EOF'
 #!/bin/bash
 set -e
-echo "📦 Installing app-screenshot-studio dependencies..."
+echo "📦 Installing shotkit dependencies..."
 if ! command -v python3 &>/dev/null; then
   echo "❌ Python 3 not found. Install via: brew install python3"
   exit 1

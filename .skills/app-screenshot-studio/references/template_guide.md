@@ -1,4 +1,4 @@
-# Template Guide — App Screenshot Studio
+# Template Guide — Shotkit
 
 ## Choosing a Template
 

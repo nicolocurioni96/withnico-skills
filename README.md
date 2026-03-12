@@ -15,7 +15,7 @@ npx ai-agent-skills install nicolocurioni96/withnico-skills
 
 Install a single skill:
 ```bash
-npx ai-agent-skills install nicolocurioni96/withnico-skills --skill app-screenshot-studio
+npx ai-agent-skills install nicolocurioni96/withnico-skills --skill shotkit
 ```
 
 Or register as a Claude Code plugin:
@@ -31,13 +31,13 @@ Works with **Claude Code**, **Cursor**, **Codex**, **Gemini CLI**, **OpenCode**,
 
 | Skill | What it does | Platform | Status |
 |-------|-------------|----------|--------|
-| [app-screenshot-studio](./skills/app-screenshot-studio/) | End-to-end App Store screenshot pipeline: Simulator capture → 5 templates → multi-locale compositing → ASC-ready output | macOS | ✅ Ready |
+| [shotkit](./skills/shotkit/) | End-to-end App Store screenshot pipeline: Simulator capture → 5 templates → multi-locale compositing → ASC-ready output | macOS | ✅ Ready |
 
 More skills coming — see [Roadmap](#roadmap).
 
 ---
 
-## app-screenshot-studio
+## shotkit
 
 The full App Store screenshot workflow in one Claude Code skill.
 
@@ -84,23 +84,23 @@ en-US, it, de, ja, fr, es, pt-BR, ko — tone-adapted per market.
 **Quick start:**
 ```bash
 # 1. Install deps
-bash skills/app-screenshot-studio/scripts/install_deps.sh
+bash skills/shotkit/scripts/install_deps.sh
 
 # 2. Capture from Simulator
-bash skills/app-screenshot-studio/scripts/capture_simulator.sh com.yourapp.bundleid ./raw
+bash skills/shotkit/scripts/capture_simulator.sh com.yourapp.bundleid ./raw
 
 # 3. Generate screenshots
-python3 skills/app-screenshot-studio/scripts/generate_screenshots.py \
+python3 skills/shotkit/scripts/generate_screenshots.py \
   --app-name "YourApp" \
   --captures ./raw \
-  --copy ./skills/app-screenshot-studio/references/copy_example.json \
+  --copy ./skills/shotkit/references/copy_example.json \
   --template bold \
   --devices iphone-6.9 ipad-13 \
   --locales en-US it \
   --output ./screenshots-output
 
 # 4. Validate
-python3 skills/app-screenshot-studio/scripts/validate_output.py --dir ./screenshots-output
+python3 skills/shotkit/scripts/validate_output.py --dir ./screenshots-output
 ```
 
 ---
