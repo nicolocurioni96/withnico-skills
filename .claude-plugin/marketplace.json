@@ -1,0 +1,13 @@
+{
+  "metadata": {
+    "pluginRoot": "./skills"
+  },
+  "plugins": [
+    {
+      "name": "shotkit",
+      "source": "shotkit",
+      "description": "End-to-end App Store screenshot pipeline: Simulator capture, 5 template styles, multi-locale copy, and ASC-ready output.",
+      "skills": ["./skills/shotkit"]
+    }
+  ]
+}

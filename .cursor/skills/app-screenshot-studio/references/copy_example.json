@@ -1,0 +1,21 @@
+{
+  "_comment": "Example copy.json — max headline 30 chars, max subline 60 chars",
+  "en-US": {
+    "screenshots": [
+      {"headline": "Track every pet", "subline": "All your pets in one convenient place", "scene": "Home dashboard"},
+      {"headline": "Never miss a visit", "subline": "Vet appointments tracked and reminded", "scene": "Vet scheduler"},
+      {"headline": "Medications on time", "subline": "Smart reminders for every treatment", "scene": "Medication list"},
+      {"headline": "Find nearby vets", "subline": "Vets, stores, and parks on the map", "scene": "MapView"},
+      {"headline": "Your data, safe", "subline": "Automatic backup across all your devices", "scene": "Settings"}
+    ]
+  },
+  "it": {
+    "screenshots": [
+      {"headline": "Tutti i tuoi animali", "subline": "Gestisci ogni animale in un unico posto", "scene": "Home dashboard"},
+      {"headline": "Zero visite perse", "subline": "Visite veterinarie tracciate e ricordate", "scene": "Pianificatore"},
+      {"headline": "Medicine in orario", "subline": "Promemoria intelligenti per ogni trattamento", "scene": "Medicine"},
+      {"headline": "Veterinari vicini", "subline": "Vet, negozi e parchi sulla mappa", "scene": "Mappa"},
+      {"headline": "I tuoi dati al sicuro", "subline": "Backup automatico su tutti i dispositivi", "scene": "Impostazioni"}
+    ]
+  }
+}
