@@ -70,3 +70,17 @@ chore: update marketplace.json
 
 Be kind and constructive. This is a small indie open source project.
 Issues and PRs with disrespectful language will be closed.
+
+---
+
+## Community & Support
+
+Join the Discord for questions, skill ideas, and feedback:
+
+👉 **https://discord.gg/JXgrVwqa8b**
+
+Channels:
+- `#skills-general` — questions and help
+- `#skill-ideas` — suggest new skills
+- `#bug-reports` — report non-security bugs
+- `#security-reports` — private security disclosures

@@ -2,12 +2,19 @@
 
 ## Reporting a Vulnerability
 
-If you find a security issue in any skill (e.g. a script that could expose credentials, exfiltrate data, or execute unsafe commands), please **do not open a public issue**.
+If you find a security issue in any skill (e.g. a script that could expose
+credentials, exfiltrate data, or execute unsafe commands), please
+**do not open a public GitHub issue**.
 
-Email: nicolo@withnico.com
+Report it privately via Discord:
+
+👉 **https://discord.gg/JXgrVwqa8b**
+
+Join the server and open a private thread in **#security-reports**
+or send a direct message to **@withnico**.
 
 Include:
-- Description of the vulnerability
+- Which skill is affected
 - Steps to reproduce
 - Potential impact
 
