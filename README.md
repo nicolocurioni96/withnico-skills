@@ -55,10 +55,10 @@ The full App Store screenshot workflow in one Claude Code skill.
 
 **What it does:**
 
-1. **Capture** — pulls raw UI from Xcode Simulator via `xcrun simctl`, interactively screen by screen
+1. **Auto-Capture** — boots Simulator devices, launches your app, navigates via deep links, sets a clean status bar, and captures screenshots — fully automated, zero manual interaction
 2. **Copy** — generates locale-aware headlines (max 30 chars) + sublines (max 60 chars) per screenshot
-3. **Composite** — renders styled images using Pillow with 5 template styles
-4. **Organize** — outputs an ASC-ready folder structure, validates dimensions, generates upload checklist
+3. **Composite** — renders styled images using Pillow with 5 template styles (minimal, bold, dark, editorial, flat)
+4. **Organize & Validate** — outputs an ASC-ready folder structure, validates dimensions, generates upload checklist
 
 **5 Template Styles:**
 
@@ -91,10 +91,15 @@ en-US, it, de, ja, fr, es, pt-BR, ko — tone-adapted per market.
 # 1. Install deps
 bash skills/shotkit/scripts/install_deps.sh
 
-# 2. Capture from Simulator
-bash skills/shotkit/scripts/capture_simulator.sh com.yourapp.bundleid ./raw
+# 2. Auto-capture from Simulator (fully automated)
+bash skills/shotkit/scripts/auto_capture.sh \
+  --bundle-id com.yourapp.bundleid \
+  --devices "iPhone 16 Pro Max" \
+  --screens "home,detail,settings" \
+  --deeplinks "myapp://home,myapp://detail/1,myapp://settings" \
+  --output ./raw
 
-# 3. Generate screenshots
+# 3. Generate styled screenshots
 python3 skills/shotkit/scripts/generate_screenshots.py \
   --app-name "YourApp" \
   --captures ./raw \
@@ -107,6 +112,13 @@ python3 skills/shotkit/scripts/generate_screenshots.py \
 # 4. Validate
 python3 skills/shotkit/scripts/validate_output.py --dir ./screenshots-output
 ```
+
+**Auto-capture features:**
+- Boots Simulator devices automatically
+- Sets clean status bar (9:41 AM, full battery)
+- Navigates screens via deep links — no manual interaction
+- Supports multiple devices sequentially
+- JSON config file support for complex setups
 
 ---
 
