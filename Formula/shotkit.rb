@@ -12,8 +12,8 @@ class Shotkit < Formula
   def install
     # Install scripts to libexec
     libexec.install Dir["skills/shotkit/scripts/*"]
-    libexec.install Dir["skills/shotkit/assets"]
-    libexec.install Dir["skills/shotkit/references"]
+    (libexec/"assets/fonts").mkpath
+    libexec.install "skills/shotkit/references"
 
     # Install Python dependencies into libexec
     venv = libexec/"vendor"
