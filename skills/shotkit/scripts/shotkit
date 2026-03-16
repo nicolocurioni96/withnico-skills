@@ -5,7 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VERSION="1.0.0"
+VERSION="2.0.0"
 
 usage() {
   cat <<EOF
@@ -14,16 +14,29 @@ shotkit $VERSION — App Store screenshot pipeline
 Usage:
   shotkit <command> [options]
 
-Commands:
-  capture       Automated Simulator capture (boot, launch, deep link, screenshot)
-  generate      Composite styled screenshots with text overlays
-  validate      Check output against App Store Connect requirements
-  install-deps  Install Python + Pillow dependencies
+Capture & Generate:
+  capture         Automated Simulator capture (boot, launch, deep link, screenshot)
+  generate        Composite styled screenshots with text overlays
+  screenshots     Full pipeline: capture + generate in one command
+  validate        Check output against App Store Connect requirements
+
+App Store Connect:
+  init            Connect to App Store Connect and configure your project
+  apps            List your apps from App Store Connect
+  download        Download existing screenshots from App Store Connect
+  upload          Upload screenshots to App Store Connect
+  update          Replace existing screenshots on App Store Connect
+
+Utilities:
+  palettes        List available trending color palettes
+  install-deps    Install Python + Pillow + PyJWT dependencies
 
 Examples:
-  shotkit capture --bundle-id com.app.id --devices "iPhone 16 Pro Max" --deeplinks "myapp://home,myapp://detail"
-  shotkit generate --app-name "MyApp" --captures ./raw --copy ./copy.json --template bold --devices iphone-6.9
-  shotkit validate --dir ./screenshots-output
+  shotkit init
+  shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
+  shotkit generate --app-name "MyApp" --captures ./raw --template trending --icon ./icon.png
+  shotkit screenshots --bundle-id com.app.id --template trending --palette aurora
+  shotkit upload --dir ./screenshots-output
 
 Run 'shotkit <command> --help' for command-specific options.
 EOF
@@ -46,6 +59,149 @@ case "$COMMAND" in
     ;;
   validate)
     exec python3 "$SCRIPT_DIR/validate_output.py" "$@"
+    ;;
+  init)
+    exec python3 "$SCRIPT_DIR/asc_init.py" "$@"
+    ;;
+  apps)
+    python3 -c "
+import sys; sys.path.insert(0, '$SCRIPT_DIR')
+from asc_api import AppStoreConnectClient, load_config
+config = load_config()
+if not config:
+    print('Error: No .shotkit.json found. Run: shotkit init')
+    sys.exit(1)
+client = AppStoreConnectClient(config['key_id'], config['issuer_id'], config['private_key_path'])
+apps = client.list_apps()
+print()
+print('Your Apps')
+print('=' * 60)
+for a in apps:
+    print(f\"  {a['name']:30s}  {a['bundle_id']}\")
+    print(f\"  {'':30s}  ID: {a['id']}\")
+    print()
+" "$@"
+    ;;
+  download)
+    exec python3 "$SCRIPT_DIR/asc_download.py" "$@"
+    ;;
+  upload)
+    exec python3 "$SCRIPT_DIR/asc_upload.py" "$@"
+    ;;
+  update)
+    python3 -c "
+import sys; sys.path.insert(0, '$SCRIPT_DIR')
+from asc_upload import main_update
+main_update()
+" "$@"
+    ;;
+  screenshots)
+    # Full pipeline: capture + generate
+    echo ""
+    echo "Shotkit — Full Screenshot Pipeline"
+    echo "==================================="
+    echo ""
+
+    # Parse flags for the combined command
+    BUNDLE_ID=""
+    TEMPLATE="trending"
+    APP_NAME=""
+    CAPTURES_DIR="./raw-captures"
+    OUTPUT_DIR="./screenshots-output"
+    COPY_FILE=""
+    DEVICES_SIM="iPhone 16 Pro Max"
+    DEVICES_GEN="iphone-6.9"
+    LOCALES="en-US"
+    DEEPLINKS=""
+    SCREENS=""
+    ICON=""
+    BRAND_COLOR=""
+    PALETTE=""
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --bundle-id)    BUNDLE_ID="$2"; shift 2 ;;
+        --template)     TEMPLATE="$2"; shift 2 ;;
+        --app-name)     APP_NAME="$2"; shift 2 ;;
+        --captures)     CAPTURES_DIR="$2"; shift 2 ;;
+        --output)       OUTPUT_DIR="$2"; shift 2 ;;
+        --copy)         COPY_FILE="$2"; shift 2 ;;
+        --devices-sim)  DEVICES_SIM="$2"; shift 2 ;;
+        --devices)      DEVICES_GEN="$2"; shift 2 ;;
+        --locales)      LOCALES="$2"; shift 2 ;;
+        --deeplinks)    DEEPLINKS="$2"; shift 2 ;;
+        --screens)      SCREENS="$2"; shift 2 ;;
+        --icon)         ICON="$2"; shift 2 ;;
+        --brand-color)  BRAND_COLOR="$2"; shift 2 ;;
+        --palette)      PALETTE="$2"; shift 2 ;;
+        --help|-h)
+          echo "Usage: shotkit screenshots [OPTIONS]"
+          echo ""
+          echo "Runs the full pipeline: capture + generate + validate"
+          echo ""
+          echo "Options:"
+          echo "  --bundle-id ID       App bundle ID (for capture)"
+          echo "  --app-name NAME      App display name (for generate)"
+          echo "  --template STYLE     Template: minimal, bold, dark, editorial, flat, trending"
+          echo "  --captures DIR       Raw captures directory (default: ./raw-captures)"
+          echo "  --output DIR         Output directory (default: ./screenshots-output)"
+          echo "  --copy FILE          Path to copy.json"
+          echo "  --devices KEYS       Generate device keys, e.g. 'iphone-6.9 ipad-13'"
+          echo "  --devices-sim NAMES  Simulator device names (comma-separated)"
+          echo "  --locales CODES      Locale codes, e.g. 'en-US it'"
+          echo "  --deeplinks URLS     Comma-separated deep link URLs"
+          echo "  --screens NAMES      Comma-separated screen names"
+          echo "  --icon PATH          App icon for auto-palette (trending)"
+          echo "  --brand-color HEX    Brand color e.g. '#1E90FF' (trending)"
+          echo "  --palette NAME       Trending palette name e.g. 'aurora'"
+          exit 0
+          ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+      esac
+    done
+
+    # Try loading app name from .shotkit.json if not provided
+    if [ -z "$APP_NAME" ] && [ -f ".shotkit.json" ]; then
+      APP_NAME=$(python3 -c "import json; print(json.load(open('.shotkit.json')).get('app_name',''))" 2>/dev/null || true)
+    fi
+
+    if [ -z "$APP_NAME" ]; then
+      APP_NAME="MyApp"
+      echo "  Warning: No --app-name provided, using '$APP_NAME'"
+    fi
+
+    # Step 1: Capture (if bundle ID provided)
+    if [ -n "$BUNDLE_ID" ]; then
+      echo "Step 1/3: Capturing screenshots..."
+      CAPTURE_ARGS="--bundle-id $BUNDLE_ID --output $CAPTURES_DIR --devices $DEVICES_SIM"
+      [ -n "$DEEPLINKS" ] && CAPTURE_ARGS="$CAPTURE_ARGS --deeplinks $DEEPLINKS"
+      [ -n "$SCREENS" ] && CAPTURE_ARGS="$CAPTURE_ARGS --screens $SCREENS"
+      bash "$SCRIPT_DIR/auto_capture.sh" $CAPTURE_ARGS
+      echo ""
+    else
+      echo "Step 1/3: Skipping capture (no --bundle-id, using existing captures in $CAPTURES_DIR)"
+    fi
+
+    # Step 2: Generate
+    echo "Step 2/3: Generating styled screenshots..."
+    GEN_ARGS="--app-name $APP_NAME --captures $CAPTURES_DIR --template $TEMPLATE --devices $DEVICES_GEN --locales $LOCALES --output $OUTPUT_DIR"
+    [ -n "$COPY_FILE" ] && GEN_ARGS="$GEN_ARGS --copy $COPY_FILE"
+    [ -n "$ICON" ] && GEN_ARGS="$GEN_ARGS --icon $ICON"
+    [ -n "$BRAND_COLOR" ] && GEN_ARGS="$GEN_ARGS --brand-color $BRAND_COLOR"
+    [ -n "$PALETTE" ] && GEN_ARGS="$GEN_ARGS --palette $PALETTE"
+    python3 "$SCRIPT_DIR/generate_screenshots.py" $GEN_ARGS
+    echo ""
+
+    # Step 3: Validate
+    echo "Step 3/3: Validating output..."
+    python3 "$SCRIPT_DIR/validate_output.py" --dir "$OUTPUT_DIR"
+    ;;
+  palettes)
+    python3 -c "
+import sys; sys.path.insert(0, '$SCRIPT_DIR')
+from trending import list_palettes
+list_palettes()
+"
     ;;
   install-deps)
     exec bash "$SCRIPT_DIR/install_deps.sh" "$@"

@@ -4,11 +4,20 @@
 
 | Template | Best For | Vibe |
 |----------|---------|------|
+| `trending` | Any app | Auto-styled with curated trending palettes |
 | `minimal` | Productivity, utilities, finance | Clean, trustworthy |
 | `bold` | Games, lifestyle, fitness | Energetic, vibrant |
 | `dark` | Pro tools, music, photography | Luxury, premium |
 | `editorial` | Creative, travel, shopping | Magazine, editorial |
 | `flat` | Photo/video, maps, AR | Immersive, UI-first |
+
+## trending (recommended)
+- Data-driven renderer based on top-charting App Store apps
+- 10 curated palettes: aurora, sunset-pop, midnight, ocean, coral, forest, neon, slate, peach, electric
+- Auto-palette from app icon: `--icon ./icon.png`
+- Custom brand color: `--brand-color "#1E90FF"`
+- Specific palette: `--palette aurora`
+- Run `shotkit palettes` to list all available palettes
 
 ## minimal
 - Background: #F8F8F8

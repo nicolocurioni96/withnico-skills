@@ -5,15 +5,16 @@ compatibility:
   platform: macOS only
   requires:
     - Xcode + Simulator (for capture mode)
-    - Python 3.8+ with Pillow (auto-installed by skill)
+    - Python 3.8+ with Pillow, PyJWT, cryptography (auto-installed by skill)
     - xcrun (bundled with Xcode)
+    - App Store Connect API key (for upload/download)
 ---
 
 # Shotkit
 
-End-to-end App Store screenshot pipeline for indie iOS developers. From raw Simulator capture to upload-ready assets organized by device, locale, and template style.
+End-to-end App Store screenshot pipeline for indie iOS developers. From raw Simulator capture to upload-ready assets, with native App Store Connect integration.
 
-**This skill is fully automated.** When triggered, the agent handles the entire pipeline — booting simulators, capturing screenshots, compositing with templates, and organizing output — without requiring manual interaction.
+**This skill is fully automated.** When triggered, the agent handles the entire pipeline — booting simulators, capturing screenshots, compositing with trending styles, and uploading to App Store Connect — without requiring manual interaction.
 
 ---
 
@@ -26,6 +27,8 @@ End-to-end App Store screenshot pipeline for indie iOS developers. From raw Simu
 **Stage 3 — Composite**: Renders styled screenshot images using Pillow — background, device UI area, app screenshot, and text overlay — with 5 template styles.
 
 **Stage 4 — Organize & Validate**: Outputs an ASC-ready folder structure (`{locale}/{device}/`), validates dimensions against App Store requirements, and generates an upload checklist.
+
+**Stage 5 — Upload** (optional): Uploads screenshots directly to App Store Connect via native API integration. Supports uploading new screenshots and replacing existing ones.
 
 ---
 
@@ -179,16 +182,25 @@ This will:
 5. Add text overlays (headline + subline)
 6. Save as PNG in the ASC-ready folder structure: `{output}/{locale}/{device}/01_screen.png`
 
-Available templates: `minimal`, `bold`, `dark`, `editorial`, `flat`
+Available templates: `minimal`, `bold`, `dark`, `editorial`, `flat`, `trending`
 
 > Read `references/template_guide.md` for detailed template descriptions and customization.
+
+**Trending template** (recommended):
+```bash
+shotkit generate --app-name "YourApp" --captures ./raw --template trending --icon ./icon.png
+shotkit generate --app-name "YourApp" --captures ./raw --template trending --palette aurora
+shotkit generate --app-name "YourApp" --captures ./raw --template trending --brand-color "#1E90FF"
+```
+
+The trending template uses curated color palettes and layouts based on top-charting App Store apps. It can also auto-extract brand colors from your app icon. Run `shotkit palettes` to see all available palettes.
 
 ---
 
 ### Step 6 — Validate Output
 
 ```bash
-python3 skills/shotkit/scripts/validate_output.py --dir ./screenshots-output
+shotkit validate --dir ./screenshots-output
 ```
 
 Checks:
@@ -199,9 +211,50 @@ Checks:
 
 ---
 
-### Step 7 — Upload (optional)
+### Step 7 — App Store Connect Integration
 
-> Read `references/asc_upload.md` for App Store Connect CLI upload instructions.
+**First-time setup:**
+```bash
+shotkit init
+```
+This connects to App Store Connect, verifies credentials, and saves config to `.shotkit.json`.
+
+**Download existing screenshots (backup):**
+```bash
+shotkit download --output ./backup
+```
+
+**Upload new screenshots:**
+```bash
+shotkit upload --dir ./screenshots-output
+```
+
+**Replace existing screenshots:**
+```bash
+shotkit update --dir ./screenshots-output
+```
+
+The upload command validates screenshots automatically before uploading.
+
+> Read `references/app_store_connect.md` for full ASC integration details.
+
+---
+
+### Full Pipeline (One Command)
+
+```bash
+shotkit screenshots \
+  --bundle-id com.yourapp.id \
+  --app-name "YourApp" \
+  --template trending \
+  --icon ./icon.png \
+  --deeplinks "myapp://home,myapp://detail,myapp://settings" \
+  --screens "home,detail,settings" \
+  --devices iphone-6.9 \
+  --locales en-US
+```
+
+This runs capture + generate + validate in sequence.
 
 ---
 

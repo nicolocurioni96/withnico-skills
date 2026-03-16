@@ -447,6 +447,7 @@ RENDERERS = {
     "dark": render_dark,
     "editorial": render_editorial,
     "flat": render_flat,
+    "trending": None,  # handled specially — uses trending.py engine
 }
 
 # ─── Screenshot Matching ────────────────────────────────────────────
@@ -517,12 +518,21 @@ def generate(
     devices,
     locales,
     output_dir,
+    icon_path=None,
+    brand_color=None,
+    palette_name=None,
 ):
     """Run the full compositing pipeline."""
-    renderer = RENDERERS.get(template)
-    if not renderer:
-        print(f"Error: Unknown template '{template}'. Choose from: {', '.join(RENDERERS.keys())}")
-        sys.exit(1)
+    is_trending = template == "trending"
+
+    if is_trending:
+        from trending import render_trending
+        renderer = None  # will call render_trending directly
+    else:
+        renderer = RENDERERS.get(template)
+        if not renderer:
+            print(f"Error: Unknown template '{template}'. Choose from: {', '.join(RENDERERS.keys())}")
+            sys.exit(1)
 
     captures = _find_captures(captures_dir)
     if not captures:
@@ -571,7 +581,15 @@ def generate(
                     continue
 
                 # Render composite
-                result = renderer(canvas_size, raw, headline, subline)
+                if is_trending:
+                    result = render_trending(
+                        canvas_size, raw, headline, subline,
+                        palette_name=palette_name,
+                        icon_path=icon_path,
+                        brand_color=brand_color,
+                    )
+                else:
+                    result = renderer(canvas_size, raw, headline, subline)
 
                 # Save
                 out_name = f"{idx + 1:02d}_{capture_file.stem.split('_', 1)[-1] if '_' in capture_file.stem else capture_file.stem}.png"
@@ -611,6 +629,9 @@ def main():
         help="Locale codes (default: en-US)",
     )
     parser.add_argument("--output", default="./screenshots-output", help="Output directory")
+    parser.add_argument("--icon", default=None, help="Path to app icon for auto-palette (trending only)")
+    parser.add_argument("--brand-color", default=None, help="Brand hex color, e.g. '#1E90FF' (trending only)")
+    parser.add_argument("--palette", default=None, help="Trending palette name, e.g. 'aurora' (trending only)")
 
     args = parser.parse_args()
 
@@ -622,6 +643,9 @@ def main():
         devices=args.devices,
         locales=args.locales,
         output_dir=args.output,
+        icon_path=args.icon,
+        brand_color=args.brand_color,
+        palette_name=args.palette,
     )
 
 

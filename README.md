@@ -22,9 +22,10 @@ brew install shotkit
 
 Then use the `shotkit` CLI directly:
 ```bash
-shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
-shotkit generate --app-name "MyApp" --captures ./raw --template bold
-shotkit validate --dir ./screenshots-output
+shotkit init                                              # connect to App Store Connect
+shotkit capture --bundle-id com.app.id --deeplinks "..."  # auto-capture from Simulator
+shotkit generate --app-name "MyApp" --template trending   # generate with trending styles
+shotkit upload --dir ./screenshots-output                  # upload to App Store Connect
 ```
 
 ### As an Agent Skill
@@ -52,7 +53,7 @@ Works with **Claude Code**, **Cursor**, **Codex**, **Gemini CLI**, **OpenCode**,
 
 | Skill | What it does | Platform | Status |
 |-------|-------------|----------|--------|
-| [shotkit](./skills/shotkit/) | End-to-end App Store screenshot pipeline: Simulator capture → 5 templates → multi-locale compositing → ASC-ready output | macOS | ✅ Ready |
+| [shotkit](./skills/shotkit/) | End-to-end App Store screenshot pipeline: auto-capture → trending styles → App Store Connect upload | macOS | ✅ Ready |
 
 More skills coming — see [Roadmap](#roadmap).
 
@@ -73,18 +74,22 @@ The full App Store screenshot workflow in one Claude Code skill.
 
 1. **Auto-Capture** — boots Simulator devices, launches your app, navigates via deep links, sets a clean status bar, and captures screenshots — fully automated, zero manual interaction
 2. **Copy** — generates locale-aware headlines (max 30 chars) + sublines (max 60 chars) per screenshot
-3. **Composite** — renders styled images using Pillow with 5 template styles (minimal, bold, dark, editorial, flat)
-4. **Organize & Validate** — outputs an ASC-ready folder structure, validates dimensions, generates upload checklist
+3. **Composite** — renders styled images using Pillow with 6 template styles including trending auto-styles
+4. **Organize & Validate** — outputs an ASC-ready folder structure, validates dimensions
+5. **App Store Connect** — native integration to upload, update, and download screenshots directly
 
-**5 Template Styles:**
+**6 Template Styles:**
 
 | Template | Best For | Style |
 |----------|---------|-------|
+| `trending` | Any app | Auto-styled with curated palettes from top-charting apps |
 | `minimal` | Productivity, utilities, finance | White bg, shadow device, clean text below |
 | `bold` | Games, lifestyle, fitness | Full-bleed gradient, large text at top |
 | `dark` | Pro tools, music, photography | Black bg, colored glow, premium feel |
 | `editorial` | Creative, travel, shopping | Split layout, magazine composition |
 | `flat` | Photo/video, maps, AR | Full-bleed UI, semi-transparent text bar |
+
+**Trending palettes:** aurora, sunset-pop, midnight, ocean, coral, forest, neon, slate, peach, electric — or auto-extract from your app icon.
 
 **Device support (2025/2026):**
 - iPhone 6.9" — 1320 × 2868 px ✅ mandatory
@@ -96,69 +101,54 @@ The full App Store screenshot workflow in one Claude Code skill.
 **Locale support:**
 en-US, it, de, ja, fr, es, pt-BR, ko — tone-adapted per market.
 
+**App Store Connect integration:**
+```bash
+shotkit init                           # connect with your API key
+shotkit apps                           # list your apps
+shotkit download --output ./backup     # download existing screenshots
+shotkit upload --dir ./screenshots-output   # upload new screenshots
+shotkit update --dir ./screenshots-output   # replace existing screenshots
+```
+
 **Requirements:**
 - macOS only
 - Xcode installed (for Simulator capture)
 - Python 3.8+ (auto-detected)
-- Pillow (auto-installed by skill)
+- Pillow, PyJWT, cryptography (auto-installed)
+- App Store Connect API key (for upload/download — [create one here](https://appstoreconnect.apple.com/access/integrations/api))
 
-**Quick start (with Homebrew):**
+**Quick start:**
 ```bash
-# 1. Auto-capture from Simulator (fully automated)
-shotkit capture \
+# 1. Connect to App Store Connect
+shotkit init
+
+# 2. Full pipeline in one command
+shotkit screenshots \
   --bundle-id com.yourapp.bundleid \
-  --devices "iPhone 16 Pro Max" \
-  --screens "home,detail,settings" \
-  --deeplinks "myapp://home,myapp://detail/1,myapp://settings" \
-  --output ./raw
-
-# 2. Generate styled screenshots
-shotkit generate \
   --app-name "YourApp" \
-  --captures ./raw \
-  --copy ./copy.json \
-  --template bold \
-  --devices iphone-6.9 ipad-13 \
-  --locales en-US it \
-  --output ./screenshots-output
+  --template trending \
+  --icon ./icon.png \
+  --deeplinks "myapp://home,myapp://detail,myapp://settings" \
+  --screens "home,detail,settings"
 
-# 3. Validate
+# 3. Upload to App Store Connect
+shotkit upload --dir ./screenshots-output
+```
+
+**Or step by step:**
+```bash
+shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
+shotkit generate --app-name "MyApp" --captures ./raw --template trending --palette aurora
 shotkit validate --dir ./screenshots-output
+shotkit upload --dir ./screenshots-output
 ```
 
-**Quick start (without Homebrew):**
-```bash
-# 1. Install deps
-bash skills/shotkit/scripts/install_deps.sh
-
-# 2. Auto-capture from Simulator (fully automated)
-bash skills/shotkit/scripts/auto_capture.sh \
-  --bundle-id com.yourapp.bundleid \
-  --devices "iPhone 16 Pro Max" \
-  --screens "home,detail,settings" \
-  --deeplinks "myapp://home,myapp://detail/1,myapp://settings" \
-  --output ./raw
-
-# 3. Generate styled screenshots
-python3 skills/shotkit/scripts/generate_screenshots.py \
-  --app-name "YourApp" \
-  --captures ./raw \
-  --copy ./skills/shotkit/references/copy_example.json \
-  --template bold \
-  --devices iphone-6.9 ipad-13 \
-  --locales en-US it \
-  --output ./screenshots-output
-
-# 4. Validate
-python3 skills/shotkit/scripts/validate_output.py --dir ./screenshots-output
-```
-
-**Auto-capture features:**
-- Boots Simulator devices automatically
-- Sets clean status bar (9:41 AM, full battery)
-- Navigates screens via deep links — no manual interaction
-- Supports multiple devices sequentially
-- JSON config file support for complex setups
+**Key features:**
+- Fully automated Simulator capture — zero manual interaction
+- 10 curated trending palettes + auto-extract from app icon
+- Native App Store Connect integration — upload, download, update
+- Multi-device, multi-locale support
+- ASC-ready folder structure with validation
 
 ---
 
