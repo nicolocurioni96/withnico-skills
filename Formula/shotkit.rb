@@ -2,7 +2,7 @@ class Shotkit < Formula
   desc "App Store screenshot pipeline: auto-capture, trending styles, ASC integration"
   homepage "https://github.com/nicolocurioni96/withnico-skills"
   url "https://github.com/nicolocurioni96/withnico-skills/archive/refs/tags/v2.0.0.tar.gz"
-  sha256 ""
+  sha256 "41659c9105da1e3d88a171a46f894b10d5e3c732530fbb634ca423e61636b8aa"
   license "MIT"
   version "2.0.0"
 
