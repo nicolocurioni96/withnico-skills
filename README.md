@@ -4,6 +4,13 @@
 
 # Shotkit
 
+[![Release](https://img.shields.io/github/v/release/nicolocurioni96/withnico-skills?style=flat-square&label=Release&color=E8530E)](https://github.com/nicolocurioni96/withnico-skills/releases)
+[![Stars](https://img.shields.io/github/stars/nicolocurioni96/withnico-skills?style=flat-square&label=Stars&color=F5A623)](https://github.com/nicolocurioni96/withnico-skills/stargazers)
+[![License](https://img.shields.io/github/license/nicolocurioni96/withnico-skills?style=flat-square&label=License&color=D4A017)](https://github.com/nicolocurioni96/withnico-skills/blob/master/LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Homebrew](https://img.shields.io/badge/Homebrew-Ready-FBB040?style=flat-square&logo=homebrew&logoColor=white)](https://github.com/nicolocurioni96/homebrew-tools)
+[![Platform](https://img.shields.io/badge/Platform-macOS-E8530E?style=flat-square&logo=apple&logoColor=white)](https://github.com/nicolocurioni96/withnico-skills)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-F5A623?style=flat-square&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/nicolocurioni96)
 
 Open source Claude Code agent skills for iOS developers and content creators on Mac.
 
