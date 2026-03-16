@@ -13,6 +13,22 @@ Built by [Nicolò Curioni](https://withnico.com) 🔸 — [@nicolocurioni96](htt
 
 ## Install
 
+### Homebrew (recommended)
+
+```bash
+brew tap nicolocurioni96/tools
+brew install shotkit
+```
+
+Then use the `shotkit` CLI directly:
+```bash
+shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
+shotkit generate --app-name "MyApp" --captures ./raw --template bold
+shotkit validate --dir ./screenshots-output
+```
+
+### As an Agent Skill
+
 Install all skills at once:
 ```bash
 npx ai-agent-skills install nicolocurioni96/withnico-skills
@@ -86,7 +102,31 @@ en-US, it, de, ja, fr, es, pt-BR, ko — tone-adapted per market.
 - Python 3.8+ (auto-detected)
 - Pillow (auto-installed by skill)
 
-**Quick start:**
+**Quick start (with Homebrew):**
+```bash
+# 1. Auto-capture from Simulator (fully automated)
+shotkit capture \
+  --bundle-id com.yourapp.bundleid \
+  --devices "iPhone 16 Pro Max" \
+  --screens "home,detail,settings" \
+  --deeplinks "myapp://home,myapp://detail/1,myapp://settings" \
+  --output ./raw
+
+# 2. Generate styled screenshots
+shotkit generate \
+  --app-name "YourApp" \
+  --captures ./raw \
+  --copy ./copy.json \
+  --template bold \
+  --devices iphone-6.9 ipad-13 \
+  --locales en-US it \
+  --output ./screenshots-output
+
+# 3. Validate
+shotkit validate --dir ./screenshots-output
+```
+
+**Quick start (without Homebrew):**
 ```bash
 # 1. Install deps
 bash skills/shotkit/scripts/install_deps.sh
