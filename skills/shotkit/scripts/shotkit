@@ -29,12 +29,14 @@ App Store Connect:
 
 Utilities:
   palettes        List available trending color palettes
+  frame-colors    List available device frame colors
   install-deps    Install Python + Pillow + PyJWT dependencies
 
 Examples:
   shotkit init
   shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
-  shotkit generate --app-name "MyApp" --captures ./raw --template trending --icon ./icon.png
+  shotkit generate --app-name "MyApp" --captures ./raw --template trending --frame device
+  shotkit generate --app-name "MyApp" --captures ./raw --template bold --frame device --frame-color black-titanium
   shotkit screenshots --bundle-id com.app.id --template trending --palette aurora
   shotkit upload --dir ./screenshots-output
 
@@ -117,6 +119,8 @@ main_update()
     ICON=""
     BRAND_COLOR=""
     PALETTE=""
+    FRAME="none"
+    FRAME_COLOR=""
 
     while [[ $# -gt 0 ]]; do
       case "$1" in
@@ -134,6 +138,8 @@ main_update()
         --icon)         ICON="$2"; shift 2 ;;
         --brand-color)  BRAND_COLOR="$2"; shift 2 ;;
         --palette)      PALETTE="$2"; shift 2 ;;
+        --frame)        FRAME="$2"; shift 2 ;;
+        --frame-color)  FRAME_COLOR="$2"; shift 2 ;;
         --help|-h)
           echo "Usage: shotkit screenshots [OPTIONS]"
           echo ""
@@ -154,6 +160,8 @@ main_update()
           echo "  --icon PATH          App icon for auto-palette (trending)"
           echo "  --brand-color HEX    Brand color e.g. '#1E90FF' (trending)"
           echo "  --palette NAME       Trending palette name e.g. 'aurora'"
+          echo "  --frame MODE         Device frame: 'none' or 'device' (realistic bezel)"
+          echo "  --frame-color COLOR  Frame color: black-titanium, natural-titanium, etc."
           exit 0
           ;;
         *) echo "Unknown option: $1"; exit 1 ;;
@@ -184,11 +192,12 @@ main_update()
 
     # Step 2: Generate
     echo "Step 2/3: Generating styled screenshots..."
-    GEN_ARGS="--app-name $APP_NAME --captures $CAPTURES_DIR --template $TEMPLATE --devices $DEVICES_GEN --locales $LOCALES --output $OUTPUT_DIR"
+    GEN_ARGS="--app-name $APP_NAME --captures $CAPTURES_DIR --template $TEMPLATE --devices $DEVICES_GEN --locales $LOCALES --output $OUTPUT_DIR --frame $FRAME"
     [ -n "$COPY_FILE" ] && GEN_ARGS="$GEN_ARGS --copy $COPY_FILE"
     [ -n "$ICON" ] && GEN_ARGS="$GEN_ARGS --icon $ICON"
     [ -n "$BRAND_COLOR" ] && GEN_ARGS="$GEN_ARGS --brand-color $BRAND_COLOR"
     [ -n "$PALETTE" ] && GEN_ARGS="$GEN_ARGS --palette $PALETTE"
+    [ -n "$FRAME_COLOR" ] && GEN_ARGS="$GEN_ARGS --frame-color $FRAME_COLOR"
     python3 "$SCRIPT_DIR/generate_screenshots.py" $GEN_ARGS
     echo ""
 
@@ -201,6 +210,13 @@ main_update()
 import sys; sys.path.insert(0, '$SCRIPT_DIR')
 from trending import list_palettes
 list_palettes()
+"
+    ;;
+  frame-colors)
+    python3 -c "
+import sys; sys.path.insert(0, '$SCRIPT_DIR')
+from device_frames import list_frame_colors
+list_frame_colors()
 "
     ;;
   install-deps)

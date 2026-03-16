@@ -45,6 +45,35 @@
 - Semi-transparent dark bar at bottom with text
 - Best when your UI is visually stunning
 
+## Device Frames
+
+Add realistic Apple device bezels around the UI screenshot with `--frame device`:
+
+```bash
+shotkit generate --app-name "MyApp" --captures ./raw --template minimal --frame device
+shotkit generate --app-name "MyApp" --captures ./raw --template bold --frame device --frame-color black-titanium
+```
+
+**Available frame colors:**
+
+| Color | RGB | Best For |
+|-------|-----|----------|
+| `black-titanium` | (60, 60, 61) | Dark/bold templates |
+| `natural-titanium` | (194, 188, 178) | Minimal/editorial templates |
+| `white-titanium` | (242, 241, 237) | Light backgrounds |
+| `desert-titanium` | (191, 164, 143) | Warm/editorial templates |
+| `space-black` | (45, 45, 47) | iPad on dark backgrounds |
+| `silver` | (210, 211, 213) | iPad on light backgrounds |
+
+Frames include:
+- Realistic bezel thickness and corner radii
+- Dynamic Island (iPhone 14+/15/16)
+- Notch (iPhone 6.5")
+- Side buttons (power, volume, action)
+- Proper screen insets
+
+Default: `natural-titanium` for iPhones, `space-black` for iPads.
+
 ## Custom Fonts
 Add any .ttf to assets/fonts/ and update _get_font() in generate_screenshots.py.
 Good free options: Inter, Space Grotesk, Sora, Outfit, Plus Jakarta Sans

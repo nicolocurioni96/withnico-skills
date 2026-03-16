@@ -521,6 +521,8 @@ def generate(
     icon_path=None,
     brand_color=None,
     palette_name=None,
+    frame_mode="none",
+    frame_color=None,
 ):
     """Run the full compositing pipeline."""
     is_trending = template == "trending"
@@ -534,15 +536,22 @@ def generate(
             print(f"Error: Unknown template '{template}'. Choose from: {', '.join(RENDERERS.keys())}")
             sys.exit(1)
 
+    # Load device frame renderer if needed
+    use_frame = frame_mode == "device"
+    if use_frame:
+        from device_frames import render_device_frame
+
     captures = _find_captures(captures_dir)
     if not captures:
         print(f"Error: No screenshots found in {captures_dir}")
         print("  Supported formats: .png, .jpg, .jpeg")
         sys.exit(1)
 
+    frame_label = f"{frame_mode} ({frame_color or 'default'})" if use_frame else "none"
     print(f"\nShotkit — Compositing Engine")
     print(f"App        : {app_name}")
     print(f"Template   : {template}")
+    print(f"Frame      : {frame_label}")
     print(f"Captures   : {len(captures)} files")
     print(f"Devices    : {', '.join(devices)}")
     print(f"Locales    : {', '.join(locales)}")
@@ -580,16 +589,22 @@ def generate(
                     print(f"  Error loading {capture_file}: {e}")
                     continue
 
+                # Apply device frame if requested
+                if use_frame:
+                    raw_for_render = render_device_frame(raw, device_key, color=frame_color)
+                else:
+                    raw_for_render = raw
+
                 # Render composite
                 if is_trending:
                     result = render_trending(
-                        canvas_size, raw, headline, subline,
+                        canvas_size, raw_for_render, headline, subline,
                         palette_name=palette_name,
                         icon_path=icon_path,
                         brand_color=brand_color,
                     )
                 else:
-                    result = renderer(canvas_size, raw, headline, subline)
+                    result = renderer(canvas_size, raw_for_render, headline, subline)
 
                 # Save
                 out_name = f"{idx + 1:02d}_{capture_file.stem.split('_', 1)[-1] if '_' in capture_file.stem else capture_file.stem}.png"
@@ -632,6 +647,17 @@ def main():
     parser.add_argument("--icon", default=None, help="Path to app icon for auto-palette (trending only)")
     parser.add_argument("--brand-color", default=None, help="Brand hex color, e.g. '#1E90FF' (trending only)")
     parser.add_argument("--palette", default=None, help="Trending palette name, e.g. 'aurora' (trending only)")
+    parser.add_argument(
+        "--frame",
+        default="none",
+        choices=["none", "device"],
+        help="Device frame: 'none' (default) or 'device' (realistic bezel with Dynamic Island)",
+    )
+    parser.add_argument(
+        "--frame-color",
+        default=None,
+        help="Frame color: black-titanium, natural-titanium, white-titanium, desert-titanium, space-black, silver",
+    )
 
     args = parser.parse_args()
 
@@ -646,6 +672,8 @@ def main():
         icon_path=args.icon,
         brand_color=args.brand_color,
         palette_name=args.palette,
+        frame_mode=args.frame,
+        frame_color=args.frame_color,
     )
 
 

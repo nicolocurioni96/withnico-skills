@@ -91,6 +91,23 @@ The full App Store screenshot workflow in one Claude Code skill.
 
 **Trending palettes:** aurora, sunset-pop, midnight, ocean, coral, forest, neon, slate, peach, electric — or auto-extract from your app icon.
 
+**Device frames:**
+Add realistic Apple device bezels with `--frame device`:
+```bash
+shotkit generate --app-name "MyApp" --captures ./raw --template bold --frame device --frame-color natural-titanium
+```
+
+| Frame Color | Device |
+|-------------|--------|
+| `black-titanium` | iPhone 16 Pro/Max |
+| `natural-titanium` | iPhone 16 Pro/Max |
+| `white-titanium` | iPhone 16 Pro/Max |
+| `desert-titanium` | iPhone 16 Pro/Max |
+| `space-black` | iPad Pro |
+| `silver` | iPad Pro |
+
+Frames include Dynamic Island, side buttons, and accurate corner radii. Run `shotkit frame-colors` to list all options.
+
 **Device support (2025/2026):**
 - iPhone 6.9" — 1320 × 2868 px ✅ mandatory
 - iPhone 6.7" — 1290 × 2796 px
