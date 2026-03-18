@@ -1,7 +1,5 @@
 <img src="assets/shotkit-banner.png" width="100%" alt="Shotkit banner" />
 
-<img src="assets/shotkit-logo.png" width="80" alt="Shotkit logo" />
-
 # Shotkit
 
 [![Release](https://img.shields.io/github/v/release/nicolocurioni96/withnico-skills?style=flat-square&label=Release&color=E8530E)](https://github.com/nicolocurioni96/withnico-skills/releases)
