@@ -1,9 +1,14 @@
 <img src="assets/shotkit-banner.png" width="100%" alt="Shotkit banner" />
 
-<img src="assets/shotkit-logo.png" width="80" alt="Shotkit logo" />
-
 # Shotkit
 
+[![Release](https://img.shields.io/github/v/release/nicolocurioni96/withnico-skills?style=flat-square&label=Release&color=E8530E)](https://github.com/nicolocurioni96/withnico-skills/releases)
+[![Stars](https://img.shields.io/github/stars/nicolocurioni96/withnico-skills?style=flat-square&label=Stars&color=F5A623)](https://github.com/nicolocurioni96/withnico-skills/stargazers)
+[![License](https://img.shields.io/github/license/nicolocurioni96/withnico-skills?style=flat-square&label=License&color=D4A017)](https://github.com/nicolocurioni96/withnico-skills/blob/master/LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Homebrew](https://img.shields.io/badge/Homebrew-Ready-FBB040?style=flat-square&logo=homebrew&logoColor=white)](https://github.com/nicolocurioni96/homebrew-tools)
+[![Platform](https://img.shields.io/badge/Platform-macOS-E8530E?style=flat-square&logo=apple&logoColor=white)](https://github.com/nicolocurioni96/withnico-skills)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-F5A623?style=flat-square&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/nicolocurioni96)
 
 Open source Claude Code agent skills for iOS developers and content creators on Mac.
 
@@ -12,6 +17,23 @@ Built by [Nicolò Curioni](https://withnico.com) 🔸 — [@nicolocurioni96](htt
 ---
 
 ## Install
+
+### Homebrew (recommended)
+
+```bash
+brew tap nicolocurioni96/tools
+brew install shotkit
+```
+
+Then use the `shotkit` CLI directly:
+```bash
+shotkit init                                              # connect to App Store Connect
+shotkit capture --bundle-id com.app.id --deeplinks "..."  # auto-capture from Simulator
+shotkit generate --app-name "MyApp" --template trending   # generate with trending styles
+shotkit upload --dir ./screenshots-output                  # upload to App Store Connect
+```
+
+### As an Agent Skill
 
 Install all skills at once:
 ```bash
@@ -36,7 +58,7 @@ Works with **Claude Code**, **Cursor**, **Codex**, **Gemini CLI**, **OpenCode**,
 
 | Skill | What it does | Platform | Status |
 |-------|-------------|----------|--------|
-| [shotkit](./skills/shotkit/) | End-to-end App Store screenshot pipeline: Simulator capture → 5 templates → multi-locale compositing → ASC-ready output | macOS | ✅ Ready |
+| [shotkit](./skills/shotkit/) | End-to-end App Store screenshot pipeline: auto-capture → trending styles → App Store Connect upload | macOS | ✅ Ready |
 
 More skills coming — see [Roadmap](#roadmap).
 
@@ -55,20 +77,41 @@ The full App Store screenshot workflow in one Claude Code skill.
 
 **What it does:**
 
-1. **Capture** — pulls raw UI from Xcode Simulator via `xcrun simctl`, interactively screen by screen
+1. **Auto-Capture** — boots Simulator devices, launches your app, navigates via deep links, sets a clean status bar, and captures screenshots — fully automated, zero manual interaction
 2. **Copy** — generates locale-aware headlines (max 30 chars) + sublines (max 60 chars) per screenshot
-3. **Composite** — renders styled images using Pillow with 5 template styles
-4. **Organize** — outputs an ASC-ready folder structure, validates dimensions, generates upload checklist
+3. **Composite** — renders styled images using Pillow with 6 template styles including trending auto-styles
+4. **Organize & Validate** — outputs an ASC-ready folder structure, validates dimensions
+5. **App Store Connect** — native integration to upload, update, and download screenshots directly
 
-**5 Template Styles:**
+**6 Template Styles:**
 
 | Template | Best For | Style |
 |----------|---------|-------|
+| `trending` | Any app | Auto-styled with curated palettes from top-charting apps |
 | `minimal` | Productivity, utilities, finance | White bg, shadow device, clean text below |
 | `bold` | Games, lifestyle, fitness | Full-bleed gradient, large text at top |
 | `dark` | Pro tools, music, photography | Black bg, colored glow, premium feel |
 | `editorial` | Creative, travel, shopping | Split layout, magazine composition |
 | `flat` | Photo/video, maps, AR | Full-bleed UI, semi-transparent text bar |
+
+**Trending palettes:** aurora, sunset-pop, midnight, ocean, coral, forest, neon, slate, peach, electric — or auto-extract from your app icon.
+
+**Device frames:**
+Add realistic Apple device bezels with `--frame device`:
+```bash
+shotkit generate --app-name "MyApp" --captures ./raw --template bold --frame device --frame-color natural-titanium
+```
+
+| Frame Color | Device |
+|-------------|--------|
+| `black-titanium` | iPhone 16 Pro/Max |
+| `natural-titanium` | iPhone 16 Pro/Max |
+| `white-titanium` | iPhone 16 Pro/Max |
+| `desert-titanium` | iPhone 16 Pro/Max |
+| `space-black` | iPad Pro |
+| `silver` | iPad Pro |
+
+Frames include Dynamic Island, side buttons, and accurate corner radii. Run `shotkit frame-colors` to list all options.
 
 **Device support (2025/2026):**
 - iPhone 6.9" — 1320 × 2868 px ✅ mandatory
@@ -80,33 +123,54 @@ The full App Store screenshot workflow in one Claude Code skill.
 **Locale support:**
 en-US, it, de, ja, fr, es, pt-BR, ko — tone-adapted per market.
 
+**App Store Connect integration:**
+```bash
+shotkit init                           # connect with your API key
+shotkit apps                           # list your apps
+shotkit download --output ./backup     # download existing screenshots
+shotkit upload --dir ./screenshots-output   # upload new screenshots
+shotkit update --dir ./screenshots-output   # replace existing screenshots
+```
+
 **Requirements:**
 - macOS only
 - Xcode installed (for Simulator capture)
 - Python 3.8+ (auto-detected)
-- Pillow (auto-installed by skill)
+- Pillow, PyJWT, cryptography (auto-installed)
+- App Store Connect API key (for upload/download — [create one here](https://appstoreconnect.apple.com/access/integrations/api))
 
 **Quick start:**
 ```bash
-# 1. Install deps
-bash skills/shotkit/scripts/install_deps.sh
+# 1. Connect to App Store Connect
+shotkit init
 
-# 2. Capture from Simulator
-bash skills/shotkit/scripts/capture_simulator.sh com.yourapp.bundleid ./raw
-
-# 3. Generate screenshots
-python3 skills/shotkit/scripts/generate_screenshots.py \
+# 2. Full pipeline in one command
+shotkit screenshots \
+  --bundle-id com.yourapp.bundleid \
   --app-name "YourApp" \
-  --captures ./raw \
-  --copy ./skills/shotkit/references/copy_example.json \
-  --template bold \
-  --devices iphone-6.9 ipad-13 \
-  --locales en-US it \
-  --output ./screenshots-output
+  --template trending \
+  --icon ./icon.png \
+  --deeplinks "myapp://home,myapp://detail,myapp://settings" \
+  --screens "home,detail,settings"
 
-# 4. Validate
-python3 skills/shotkit/scripts/validate_output.py --dir ./screenshots-output
+# 3. Upload to App Store Connect
+shotkit upload --dir ./screenshots-output
 ```
+
+**Or step by step:**
+```bash
+shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
+shotkit generate --app-name "MyApp" --captures ./raw --template trending --palette aurora
+shotkit validate --dir ./screenshots-output
+shotkit upload --dir ./screenshots-output
+```
+
+**Key features:**
+- Fully automated Simulator capture — zero manual interaction
+- 10 curated trending palettes + auto-extract from app icon
+- Native App Store Connect integration — upload, download, update
+- Multi-device, multi-locale support
+- ASC-ready folder structure with validation
 
 ---
 
