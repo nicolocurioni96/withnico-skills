@@ -5,25 +5,30 @@ compatibility:
   platform: macOS only
   requires:
     - Xcode + Simulator (for capture mode)
-    - Python 3.8+ with Pillow (auto-installed by skill)
+    - Python 3.8+ with Pillow, PyJWT, cryptography (auto-installed by skill)
     - xcrun (bundled with Xcode)
+    - App Store Connect API key (for upload/download)
 ---
 
 # Shotkit
 
-End-to-end App Store screenshot pipeline for indie iOS developers. From raw Simulator capture to upload-ready assets organized by device, locale, and template style.
+End-to-end App Store screenshot pipeline for indie iOS developers. From raw Simulator capture to upload-ready assets, with native App Store Connect integration.
+
+**This skill is fully automated.** When triggered, the agent handles the entire pipeline — booting simulators, capturing screenshots, compositing with trending styles, and uploading to App Store Connect — without requiring manual interaction.
 
 ---
 
 ## What This Skill Does
 
-**Stage 1 — Capture** (optional): Takes raw UI screenshots from the Xcode Simulator using `xcrun simctl`.
+**Stage 1 — Auto-Capture** (optional): Boots Xcode Simulator devices, launches the app via bundle ID, navigates screens via deep links, sets a clean status bar (9:41, full battery), and captures raw UI screenshots — all without user interaction.
 
-**Stage 2 — Generate Copy**: Produces locale-aware headlines + sublines for each screenshot frame.
+**Stage 2 — Generate Copy**: Produces locale-aware headlines (max 30 chars) + sublines (max 60 chars) for each screenshot frame. If no copy.json is provided, the agent generates one based on the app's features and target audience.
 
-**Stage 3 — Composite**: Renders styled screenshot images using Pillow — background, device mockup area, app UI screenshot, and text overlay.
+**Stage 3 — Composite**: Renders styled screenshot images using Pillow — background, device UI area, app screenshot, and text overlay — with 5 template styles.
 
-**Stage 4 — Organize**: Outputs a folder structure compatible with `asc` CLI and App Store Connect upload.
+**Stage 4 — Organize & Validate**: Outputs an ASC-ready folder structure (`{locale}/{device}/`), validates dimensions against App Store requirements, and generates an upload checklist.
+
+**Stage 5 — Upload** (optional): Uploads screenshots directly to App Store Connect via native API integration. Supports uploading new screenshots and replacing existing ones.
 
 ---
 
@@ -41,16 +46,21 @@ Ask the developer for the following (or infer from context if already provided):
 - Additional locales (optional, e.g. Italian, German, Japanese)
 
 **Screenshot source (choose one):**
-- A) Auto-capture from booted Simulator → ask for app Bundle ID
-- B) Existing screenshots folder → ask for path to folder of PNG/JPG files
-- C) No UI screenshots yet → generate placeholder-based composites with colored UI mockups
+- A) **Automated capture** from Simulator → ask for app Bundle ID and deep link URLs per screen
+- B) **Existing screenshots** folder → ask for path to folder of PNG/JPG files
+- C) **No UI screenshots yet** → generate placeholder-based composites with colored UI mockups
+
+If the developer chooses option A, also ask:
+- Deep link URL scheme (e.g. `myapp://`) and paths for each screen to capture
+- Which Simulator devices to boot (default: iPhone 16 Pro Max)
+- If no deep links are available, the agent will capture the app's launch screen only
 
 **Template style (choose one, or generate previews for all):**
 - `minimal` — white/light background, small device frame, centered text, clean typography
 - `bold` — full-bleed gradient background, large text, high contrast, punchy
 - `dark` — dark/black background, device glow effect, premium feel
-- `editorial` — magazine-style layout, diagonal composition, text beside device
-- `flat` — no device frame, full-bleed app UI with text overlay bar at top or bottom
+- `editorial` — magazine-style layout, split composition, text beside device
+- `flat` — no device frame, full-bleed app UI with text overlay bar at bottom
 
 **Device targets (default: iPhone 6.9" + iPad 13"):**
 - iPhone 6.9" — 1320 × 2868 px (mandatory as of 2025)
@@ -64,24 +74,209 @@ Ask the developer for the following (or infer from context if already provided):
 ---
 
 ### Step 2 — Install Dependencies
+
+Run the dependency installer:
 ```bash
-cat > "$REPO/skills/shotkit/scripts/install_deps.sh" << 'EOF'
-#!/bin/bash
-set -e
-echo "📦 Installing shotkit dependencies..."
-if ! command -v python3 &>/dev/null; then
-  echo "❌ Python 3 not found. Install via: brew install python3"
-  exit 1
-fi
-echo "✅ Python $(python3 --version) found"
-pip3 install Pillow --quiet --break-system-packages 2>/dev/null \
-  || pip3 install Pillow --quiet 2>/dev/null \
-  || { echo "❌ Pillow install failed. Try: pip3 install Pillow"; exit 1; }
-echo "✅ Pillow installed"
-if command -v xcrun &>/dev/null; then
-  echo "✅ xcrun found (Xcode present)"
-else
-  echo "⚠️  xcrun not found. Simulator capture will not work."
-fi
-echo ""
-echo "✅ Dependencies ready."
+bash skills/shotkit/scripts/install_deps.sh
+```
+
+This checks for Python 3, installs Pillow, and verifies xcrun is available.
+
+---
+
+### Step 3 — Capture Screenshots (Automated)
+
+**Option A — Fully automated capture with deep links:**
+```bash
+bash skills/shotkit/scripts/auto_capture.sh \
+  --bundle-id com.yourapp.bundleid \
+  --devices "iPhone 16 Pro Max,iPad Pro 13-inch (M4)" \
+  --screens "home,detail,settings,profile,onboarding" \
+  --deeplinks "myapp://home,myapp://detail/1,myapp://settings,myapp://profile,myapp://onboarding" \
+  --output ./raw-captures
+```
+
+**Option A (with config file):**
+Create a `capture_config.json`:
+```json
+{
+  "bundle_id": "com.yourapp.bundleid",
+  "devices": ["iPhone 16 Pro Max", "iPad Pro 13-inch (M4)"],
+  "screens": [
+    {"name": "home", "deeplink": "myapp://home"},
+    {"name": "detail", "deeplink": "myapp://detail/1"},
+    {"name": "settings", "deeplink": "myapp://settings"},
+    {"name": "profile", "deeplink": "myapp://profile"},
+    {"name": "onboarding", "deeplink": "myapp://onboarding"}
+  ]
+}
+```
+Then run:
+```bash
+bash skills/shotkit/scripts/auto_capture.sh --config capture_config.json --output ./raw-captures
+```
+
+The auto-capture script will:
+1. Boot each Simulator device automatically
+2. Set a clean status bar (9:41, full battery, full signal)
+3. Launch the app
+4. Navigate to each screen via deep link
+5. Wait for the screen to settle, then capture
+6. Save organized by device subfolder
+7. Shut down each device when done
+
+**Option B — Interactive capture (fallback):**
+```bash
+bash skills/shotkit/scripts/capture_simulator.sh com.yourapp.bundleid ./raw-captures
+```
+This is the legacy interactive mode where the developer navigates manually and presses ENTER to capture.
+
+**Option C — Existing screenshots:**
+Skip this step. Point `--captures` at the existing folder in Step 4.
+
+---
+
+### Step 4 — Generate Copy (if needed)
+
+If the developer has not provided a `copy.json`, generate one based on the app's features and target audience. Follow the format in `references/copy_example.json`:
+
+```json
+{
+  "en-US": {
+    "screenshots": [
+      {"headline": "Max 30 chars", "subline": "Max 60 chars for the subline text", "scene": "Screen name"}
+    ]
+  }
+}
+```
+
+Rules:
+- Headlines: max 30 characters, action-oriented
+- Sublines: max 60 characters, benefit-focused
+- Adapt tone per locale (formal for de/ja, casual for en-US)
+- One entry per screenshot, matched by index to the capture files
+
+Save as `copy.json` in the project root or a path the developer specifies.
+
+---
+
+### Step 5 — Composite Screenshots
+
+Run the compositing engine:
+```bash
+python3 skills/shotkit/scripts/generate_screenshots.py \
+  --app-name "YourApp" \
+  --captures ./raw-captures \
+  --copy ./copy.json \
+  --template bold \
+  --devices iphone-6.9 ipad-13 \
+  --locales en-US it \
+  --output ./screenshots-output
+```
+
+This will:
+1. Load raw captures from the captures directory
+2. Load copy data for each locale
+3. Render each screenshot through the chosen template
+4. Resize and position the UI within the device-specific canvas
+5. Add text overlays (headline + subline)
+6. Save as PNG in the ASC-ready folder structure: `{output}/{locale}/{device}/01_screen.png`
+
+Available templates: `minimal`, `bold`, `dark`, `editorial`, `flat`, `trending`
+
+> Read `references/template_guide.md` for detailed template descriptions and customization.
+
+**Trending template** (recommended):
+```bash
+shotkit generate --app-name "YourApp" --captures ./raw --template trending --icon ./icon.png
+shotkit generate --app-name "YourApp" --captures ./raw --template trending --palette aurora
+shotkit generate --app-name "YourApp" --captures ./raw --template trending --brand-color "#1E90FF"
+```
+
+The trending template uses curated color palettes and layouts based on top-charting App Store apps. It can also auto-extract brand colors from your app icon. Run `shotkit palettes` to see all available palettes.
+
+---
+
+### Step 6 — Validate Output
+
+```bash
+shotkit validate --dir ./screenshots-output
+```
+
+Checks:
+- All screenshots match required device dimensions
+- Max 10 per device per locale
+- Files are valid PNG/JPEG
+- Generates a pass/fail report
+
+---
+
+### Step 7 — App Store Connect Integration
+
+**First-time setup:**
+```bash
+shotkit init
+```
+This connects to App Store Connect, verifies credentials, and saves config to `.shotkit.json`.
+
+**Download existing screenshots (backup):**
+```bash
+shotkit download --output ./backup
+```
+
+**Upload new screenshots:**
+```bash
+shotkit upload --dir ./screenshots-output
+```
+
+**Replace existing screenshots:**
+```bash
+shotkit update --dir ./screenshots-output
+```
+
+The upload command validates screenshots automatically before uploading.
+
+> Read `references/app_store_connect.md` for full ASC integration details.
+
+---
+
+### Full Pipeline (One Command)
+
+```bash
+shotkit screenshots \
+  --bundle-id com.yourapp.id \
+  --app-name "YourApp" \
+  --template trending \
+  --icon ./icon.png \
+  --deeplinks "myapp://home,myapp://detail,myapp://settings" \
+  --screens "home,detail,settings" \
+  --devices iphone-6.9 \
+  --locales en-US
+```
+
+This runs capture + generate + validate in sequence.
+
+---
+
+## Automation Best Practices
+
+### Deep Link Setup
+For fully automated capture, the app must support URL schemes or Universal Links. Common patterns:
+- `myapp://home` — main screen
+- `myapp://feature/detail?id=1` — specific content
+- `myapp://settings` — settings screen
+- `myapp://onboarding` — onboarding flow
+
+Add URL schemes in Xcode: Target → Info → URL Types.
+
+### Demo Data
+For best results, ensure the app has realistic demo data loaded before capture. Options:
+- Use a debug build with seeded data
+- Set up a launch argument (e.g. `--demo-mode`) that loads sample content
+- Use `xcrun simctl` to push notifications or set defaults before capture
+
+### Multi-Device Workflow
+The automated capture handles multiple devices sequentially — it boots each device, captures all screens, then shuts it down before moving to the next. This keeps resource usage low.
+
+### Status Bar
+The auto-capture script automatically sets the status bar to the Apple-standard "marketing" look: 9:41 AM, full battery, full signal, no carrier name. Use `--no-clean-status` to skip this.

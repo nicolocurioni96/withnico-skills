@@ -147,3 +147,10 @@ __pycache__/
 .shotkit.json
 raw-captures/
 screenshots-output/
+
+# macOS Finder metadata and lock files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.!*

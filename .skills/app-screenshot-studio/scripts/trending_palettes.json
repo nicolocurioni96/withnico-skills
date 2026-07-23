@@ -1,0 +1,131 @@
+{
+  "_comment": "Shotkit trending palettes — curated from top-charting App Store screenshots. Updated each release.",
+  "version": "2026-Q1",
+  "palettes": [
+    {
+      "name": "aurora",
+      "gradient_top": [30, 0, 80],
+      "gradient_bottom": [0, 180, 220],
+      "text_color": [255, 255, 255],
+      "sub_color": [200, 220, 255],
+      "vibe": "premium",
+      "categories": ["productivity", "finance", "health"]
+    },
+    {
+      "name": "sunset-pop",
+      "gradient_top": [200, 50, 20],
+      "gradient_bottom": [255, 160, 0],
+      "text_color": [255, 255, 255],
+      "sub_color": [255, 230, 200],
+      "vibe": "energetic",
+      "categories": ["social", "lifestyle", "fitness"]
+    },
+    {
+      "name": "midnight",
+      "gradient_top": [10, 10, 30],
+      "gradient_bottom": [40, 20, 80],
+      "text_color": [240, 240, 255],
+      "sub_color": [160, 160, 200],
+      "vibe": "dark-premium",
+      "categories": ["music", "photography", "pro-tools"]
+    },
+    {
+      "name": "ocean",
+      "gradient_top": [0, 40, 100],
+      "gradient_bottom": [0, 140, 180],
+      "text_color": [255, 255, 255],
+      "sub_color": [180, 220, 240],
+      "vibe": "calm",
+      "categories": ["weather", "travel", "meditation"]
+    },
+    {
+      "name": "coral",
+      "gradient_top": [220, 60, 80],
+      "gradient_bottom": [255, 120, 100],
+      "text_color": [255, 255, 255],
+      "sub_color": [255, 220, 220],
+      "vibe": "warm",
+      "categories": ["food", "dating", "shopping"]
+    },
+    {
+      "name": "forest",
+      "gradient_top": [10, 50, 30],
+      "gradient_bottom": [40, 160, 80],
+      "text_color": [255, 255, 255],
+      "sub_color": [200, 240, 210],
+      "vibe": "natural",
+      "categories": ["health", "outdoors", "environment"]
+    },
+    {
+      "name": "neon",
+      "gradient_top": [20, 0, 40],
+      "gradient_bottom": [100, 0, 200],
+      "text_color": [255, 255, 255],
+      "sub_color": [220, 180, 255],
+      "vibe": "bold",
+      "categories": ["games", "entertainment", "social"]
+    },
+    {
+      "name": "slate",
+      "gradient_top": [40, 45, 55],
+      "gradient_bottom": [80, 90, 110],
+      "text_color": [255, 255, 255],
+      "sub_color": [200, 205, 215],
+      "vibe": "professional",
+      "categories": ["business", "developer-tools", "utilities"]
+    },
+    {
+      "name": "peach",
+      "gradient_top": [240, 150, 120],
+      "gradient_bottom": [255, 200, 170],
+      "text_color": [50, 30, 20],
+      "sub_color": [100, 60, 40],
+      "vibe": "soft",
+      "categories": ["wellness", "beauty", "journaling"]
+    },
+    {
+      "name": "electric",
+      "gradient_top": [0, 60, 200],
+      "gradient_bottom": [0, 200, 255],
+      "text_color": [255, 255, 255],
+      "sub_color": [200, 230, 255],
+      "vibe": "tech",
+      "categories": ["ai", "developer-tools", "productivity"]
+    }
+  ],
+  "layouts": [
+    {
+      "name": "hero-top",
+      "text_position": "top",
+      "ui_position": "bottom",
+      "text_y_ratio": 0.06,
+      "ui_y_start_ratio": 0.30,
+      "ui_scale": 0.65,
+      "best_for": "feature-highlight"
+    },
+    {
+      "name": "center-float",
+      "text_position": "bottom",
+      "ui_position": "center",
+      "text_y_ratio": 0.75,
+      "ui_y_start_ratio": 0.08,
+      "ui_scale": 0.58,
+      "best_for": "clean-ui"
+    },
+    {
+      "name": "text-heavy",
+      "text_position": "top",
+      "ui_position": "bottom",
+      "text_y_ratio": 0.05,
+      "ui_y_start_ratio": 0.38,
+      "ui_scale": 0.58,
+      "best_for": "copy-driven"
+    }
+  ],
+  "typography": {
+    "headline_scale": 0.08,
+    "subline_scale": 0.042,
+    "headline_weight": "bold",
+    "subline_weight": "regular"
+  }
+}

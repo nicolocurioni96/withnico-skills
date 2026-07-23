@@ -6,7 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [2.0.0] — Unreleased
+## [2.0.1] — Unreleased
+
+### Changed
+- Bump the `shotkit` CLI internal version marker to `2.0.1`.
+- Sync the `.skills/app-screenshot-studio`, `.cursor/skills/app-screenshot-studio`, and `.github/skills/app-screenshot-studio` distribution mirrors so their `SKILL.md`, `scripts/`, and `references/` match the current primary skill in `skills/shotkit/` (previously frozen at the v1.0.0 snapshot).
+- Document how `.shotkit.json` stores App Store Connect key metadata and where the `.p8` private key lives in `SECURITY.md`.
+
+### Fixed
+- Remove the stray `assets/.!34093!shotkit-logo.png` Finder lock file that had been committed by accident.
+- Add macOS Finder metadata patterns (`.DS_Store`, `._*`, `.!*`, `.AppleDouble`, `.LSOverride`) to `.gitignore` so lock files can't reappear.
+
+### Notes
+- The Homebrew formula (`Formula/shotkit.rb`) still installs the `v2.0.0` tarball. It will be bumped to `v2.0.1` only when a real `v2.0.1` GitHub release exists so its `sha256` can be recomputed against the published tarball.
+
+## [2.0.0] — 2026-03-16
 
 ### Added
 - **Realistic device frames** — `--frame device` renders iPhone/iPad bezels with Dynamic Island, notch, side buttons, and rounded corners. Supports 6 frame colors: `black-titanium`, `natural-titanium`, `white-titanium`, `desert-titanium`, `space-black`, `silver`. Run `shotkit frame-colors` to list all options.
