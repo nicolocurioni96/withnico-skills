@@ -225,7 +225,7 @@ Checks:
 - Files are readable, and PNG/JPEG magic bytes match the extension
 - No PNG carries an alpha channel (App Store Connect rejects those on upload)
 - No empty per-device folders, and no folder over the 10-image limit
-- Generates a pass/fail summary; magic-byte and alpha-channel checks are warnings in v2.1 and are scheduled to become errors in v2.2.
+- Generates a pass/fail summary; magic-byte and alpha-channel checks are warnings in v2.2 and are scheduled to become errors in v2.3.
 
 ---
 

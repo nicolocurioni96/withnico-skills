@@ -194,7 +194,7 @@ xcrun simctl openurl booted "myapp://home"
 
 **Upload fails with 403.** The API key needs the **Developer** or **App Manager** role in App Store Connect → Users and Access → Keys. The key you generated must have access to the app you selected during `shotkit init`.
 
-**Upload fails with "alpha channel not permitted".** App Store Connect rejects PNGs with transparency. Run `shotkit validate --dir ./screenshots-output` — v2.1 flags this as a warning; flatten the offending PNGs (open in Preview, export as PNG without alpha) and re-upload.
+**Upload fails with "alpha channel not permitted".** App Store Connect rejects PNGs with transparency. Run `shotkit validate --dir ./screenshots-output` — v2.2 flags this as a warning; flatten the offending PNGs (open in Preview, export as PNG without alpha) and re-upload.
 
 **Python packages not found.** If Homebrew isn't managing shotkit for you, run:
 ```bash

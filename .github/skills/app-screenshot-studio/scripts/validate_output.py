@@ -12,8 +12,8 @@ Checks generated screenshots against App Store Connect requirements:
   * No empty per-device folders
   * At most 10 files per device per locale (App Store limit)
 
-Emits warnings for the alpha and magic-byte checks in v2.1.x; these are
-scheduled to become errors in v2.2.0.
+Emits warnings for the alpha and magic-byte checks in v2.2.x; these are
+scheduled to become errors in v2.3.0.
 
 Usage:
   python3 validate_output.py --dir ./screenshots-output
@@ -148,7 +148,7 @@ def validate(output_dir):
                     result["files"].append(entry)
                     continue
                 if detected != expected_kind:
-                    # Warning in v2.1.x; will become an error in v2.2.0.
+                    # Warning in v2.2.x; will become an error in v2.3.0.
                     result["warnings"].append({
                         "kind": "magic-byte-mismatch",
                         "path": entry["path"],
@@ -186,7 +186,7 @@ def validate(output_dir):
                     entry["issues"].append(f"size {w}x{h} != expected {expected_size[0]}x{expected_size[1]}")
 
                 if alpha:
-                    # Warning in v2.1.x; ASC will reject on upload but the file itself is not corrupt.
+                    # Warning in v2.2.x; ASC will reject on upload but the file itself is not corrupt.
                     result["warnings"].append({
                         "kind": "alpha-channel",
                         "path": entry["path"],
