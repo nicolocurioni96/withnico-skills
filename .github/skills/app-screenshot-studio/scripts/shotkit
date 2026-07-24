@@ -5,7 +5,15 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VERSION="2.0.1"
+VERSION="2.1.0"
+
+# Prefer the isolated venv created by install_deps.sh; fall back to the
+# python3 on PATH (which the Homebrew wrapper points at libexec/vendor).
+if [ -x "${SHOTKIT_HOME:-$HOME/.shotkit}/venv/bin/python3" ]; then
+  PYTHON="${SHOTKIT_HOME:-$HOME/.shotkit}/venv/bin/python3"
+else
+  PYTHON="python3"
+fi
 
 usage() {
   cat <<EOF
@@ -17,7 +25,7 @@ Usage:
 Capture & Generate:
   capture         Automated Simulator capture (boot, launch, deep link, screenshot)
   generate        Composite styled screenshots with text overlays
-  screenshots     Full pipeline: capture + generate in one command
+  screenshots     Full pipeline: capture + generate + validate in one command
   validate        Check output against App Store Connect requirements
 
 App Store Connect:
@@ -28,17 +36,24 @@ App Store Connect:
   update          Replace existing screenshots on App Store Connect
 
 Utilities:
+  doctor          Preflight check: Python deps, Xcode, Simulator, ASC config
   palettes        List available trending color palettes
   frame-colors    List available device frame colors
-  install-deps    Install Python + Pillow + PyJWT dependencies
+  install-deps    Install Python + Pillow + PyJWT dependencies (isolated venv)
 
 Examples:
+  shotkit doctor
   shotkit init
   shotkit capture --bundle-id com.app.id --deeplinks "myapp://home,myapp://detail"
   shotkit generate --app-name "MyApp" --captures ./raw --template trending --frame device
   shotkit generate --app-name "MyApp" --captures ./raw --template bold --frame device --frame-color black-titanium
   shotkit screenshots --bundle-id com.app.id --template trending --palette aurora
+  shotkit screenshots --bundle-id com.app.id --template trending --report ./run.json
   shotkit upload --dir ./screenshots-output
+
+Environment:
+  SHOTKIT_HOME               Override the shotkit home dir (default: \$HOME/.shotkit)
+  SHOTKIT_LEGACY_INSTALL=1   Force install-deps to use system Python instead of a venv
 
 Run 'shotkit <command> --help' for command-specific options.
 EOF
@@ -57,16 +72,19 @@ case "$COMMAND" in
     exec bash "$SCRIPT_DIR/auto_capture.sh" "$@"
     ;;
   generate)
-    exec python3 "$SCRIPT_DIR/generate_screenshots.py" "$@"
+    exec "$PYTHON" "$SCRIPT_DIR/generate_screenshots.py" "$@"
     ;;
   validate)
-    exec python3 "$SCRIPT_DIR/validate_output.py" "$@"
+    exec "$PYTHON" "$SCRIPT_DIR/validate_output.py" "$@"
+    ;;
+  doctor)
+    exec "$PYTHON" "$SCRIPT_DIR/doctor.py" "$@"
     ;;
   init)
-    exec python3 "$SCRIPT_DIR/asc_init.py" "$@"
+    exec "$PYTHON" "$SCRIPT_DIR/asc_init.py" "$@"
     ;;
   apps)
-    python3 -c "
+    "$PYTHON" -c "
 import sys; sys.path.insert(0, '$SCRIPT_DIR')
 from asc_api import AppStoreConnectClient, load_config
 config = load_config()
@@ -85,20 +103,20 @@ for a in apps:
 " "$@"
     ;;
   download)
-    exec python3 "$SCRIPT_DIR/asc_download.py" "$@"
+    exec "$PYTHON" "$SCRIPT_DIR/asc_download.py" "$@"
     ;;
   upload)
-    exec python3 "$SCRIPT_DIR/asc_upload.py" "$@"
+    exec "$PYTHON" "$SCRIPT_DIR/asc_upload.py" "$@"
     ;;
   update)
-    python3 -c "
+    "$PYTHON" -c "
 import sys; sys.path.insert(0, '$SCRIPT_DIR')
 from asc_upload import main_update
 main_update()
 " "$@"
     ;;
   screenshots)
-    # Full pipeline: capture + generate
+    # Full pipeline: capture + generate + validate
     echo ""
     echo "Shotkit — Full Screenshot Pipeline"
     echo "==================================="
@@ -121,6 +139,7 @@ main_update()
     PALETTE=""
     FRAME="none"
     FRAME_COLOR=""
+    REPORT_FILE=""
 
     while [[ $# -gt 0 ]]; do
       case "$1" in
@@ -140,28 +159,32 @@ main_update()
         --palette)      PALETTE="$2"; shift 2 ;;
         --frame)        FRAME="$2"; shift 2 ;;
         --frame-color)  FRAME_COLOR="$2"; shift 2 ;;
+        --report)       REPORT_FILE="$2"; shift 2 ;;
         --help|-h)
-          echo "Usage: shotkit screenshots [OPTIONS]"
-          echo ""
-          echo "Runs the full pipeline: capture + generate + validate"
-          echo ""
-          echo "Options:"
-          echo "  --bundle-id ID       App bundle ID (for capture)"
-          echo "  --app-name NAME      App display name (for generate)"
-          echo "  --template STYLE     Template: minimal, bold, dark, editorial, flat, trending"
-          echo "  --captures DIR       Raw captures directory (default: ./raw-captures)"
-          echo "  --output DIR         Output directory (default: ./screenshots-output)"
-          echo "  --copy FILE          Path to copy.json"
-          echo "  --devices KEYS       Generate device keys, e.g. 'iphone-6.9 ipad-13'"
-          echo "  --devices-sim NAMES  Simulator device names (comma-separated)"
-          echo "  --locales CODES      Locale codes, e.g. 'en-US it'"
-          echo "  --deeplinks URLS     Comma-separated deep link URLs"
-          echo "  --screens NAMES      Comma-separated screen names"
-          echo "  --icon PATH          App icon for auto-palette (trending)"
-          echo "  --brand-color HEX    Brand color e.g. '#1E90FF' (trending)"
-          echo "  --palette NAME       Trending palette name e.g. 'aurora'"
-          echo "  --frame MODE         Device frame: 'none' or 'device' (realistic bezel)"
-          echo "  --frame-color COLOR  Frame color: black-titanium, natural-titanium, etc."
+          cat <<HLP
+Usage: shotkit screenshots [OPTIONS]
+
+Runs the full pipeline: capture + generate + validate
+
+Options:
+  --bundle-id ID       App bundle ID (for capture)
+  --app-name NAME      App display name (for generate)
+  --template STYLE     Template: minimal, bold, dark, editorial, flat, trending
+  --captures DIR       Raw captures directory (default: ./raw-captures)
+  --output DIR         Output directory (default: ./screenshots-output)
+  --copy FILE          Path to copy.json
+  --devices KEYS       Generate device keys, e.g. 'iphone-6.9 ipad-13'
+  --devices-sim NAMES  Simulator device names (comma-separated)
+  --locales CODES      Locale codes, e.g. 'en-US it'
+  --deeplinks URLS     Comma-separated deep link URLs
+  --screens NAMES      Comma-separated screen names
+  --icon PATH          App icon for auto-palette (trending)
+  --brand-color HEX    Brand color e.g. '#1E90FF' (trending)
+  --palette NAME       Trending palette name e.g. 'aurora'
+  --frame MODE         Device frame: 'none' or 'device' (realistic bezel)
+  --frame-color COLOR  Frame color: black-titanium, natural-titanium, etc.
+  --report FILE        Write a JSON run report to FILE after validation
+HLP
           exit 0
           ;;
         *) echo "Unknown option: $1"; exit 1 ;;
@@ -170,7 +193,7 @@ main_update()
 
     # Try loading app name from .shotkit.json if not provided
     if [ -z "$APP_NAME" ] && [ -f ".shotkit.json" ]; then
-      APP_NAME=$(python3 -c "import json; print(json.load(open('.shotkit.json')).get('app_name',''))" 2>/dev/null || true)
+      APP_NAME=$("$PYTHON" -c "import json; print(json.load(open('.shotkit.json')).get('app_name',''))" 2>/dev/null || true)
     fi
 
     if [ -z "$APP_NAME" ]; then
@@ -198,22 +221,24 @@ main_update()
     [ -n "$BRAND_COLOR" ] && GEN_ARGS+=(--brand-color "$BRAND_COLOR")
     [ -n "$PALETTE" ] && GEN_ARGS+=(--palette "$PALETTE")
     [ -n "$FRAME_COLOR" ] && GEN_ARGS+=(--frame-color "$FRAME_COLOR")
-    python3 "$SCRIPT_DIR/generate_screenshots.py" "${GEN_ARGS[@]}"
+    "$PYTHON" "$SCRIPT_DIR/generate_screenshots.py" "${GEN_ARGS[@]}"
     echo ""
 
     # Step 3: Validate
     echo "Step 3/3: Validating output..."
-    python3 "$SCRIPT_DIR/validate_output.py" --dir "$OUTPUT_DIR"
+    VALIDATE_ARGS=(--dir "$OUTPUT_DIR")
+    [ -n "$REPORT_FILE" ] && VALIDATE_ARGS+=(--report "$REPORT_FILE")
+    "$PYTHON" "$SCRIPT_DIR/validate_output.py" "${VALIDATE_ARGS[@]}"
     ;;
   palettes)
-    python3 -c "
+    "$PYTHON" -c "
 import sys; sys.path.insert(0, '$SCRIPT_DIR')
 from trending import list_palettes
 list_palettes()
 "
     ;;
   frame-colors)
-    python3 -c "
+    "$PYTHON" -c "
 import sys; sys.path.insert(0, '$SCRIPT_DIR')
 from device_frames import list_frame_colors
 list_frame_colors()

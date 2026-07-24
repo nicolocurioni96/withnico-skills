@@ -30,6 +30,11 @@ except ImportError:
     print("Error: Pillow not installed. Run: bash scripts/install_deps.sh")
     sys.exit(1)
 
+# App Store Connect copy-length budgets. Used for overflow warnings only —
+# text is still rendered, just flagged as risky.
+HEADLINE_MAX_CHARS = 30
+SUBLINE_MAX_CHARS = 60
+
 # ─── Device Specs ────────────────────────────────────────────────────
 
 DEVICE_SPECS = {
@@ -508,6 +513,70 @@ def _load_copy(copy_path, locale):
     return []
 
 
+# ─── Input validation ────────────────────────────────────────────────
+
+def _load_palette_names():
+    """Read palette names from trending_palettes.json (best-effort)."""
+    path = SKILL_ROOT / "scripts" / "trending_palettes.json"
+    try:
+        with open(path) as fh:
+            data = json.load(fh)
+        return [p["name"] for p in data.get("palettes", [])]
+    except (OSError, json.JSONDecodeError, KeyError):
+        return []
+
+
+def _load_frame_color_names():
+    """Read frame-color keys from device_frames (best-effort)."""
+    try:
+        from device_frames import FRAME_COLORS
+        return list(FRAME_COLORS.keys())
+    except Exception:
+        return []
+
+
+def _validate_choice(flag, value, options, context=""):
+    """Exit with a helpful message if `value` is not in `options`."""
+    if value is None or not options:
+        return
+    if value in options:
+        return
+    print(f"Error: {flag} '{value}' is not a valid choice.", file=sys.stderr)
+    if context:
+        print(f"  ({context})", file=sys.stderr)
+    print("  Available: " + ", ".join(options), file=sys.stderr)
+    sys.exit(2)
+
+
+# ─── Copy-length overflow warnings ───────────────────────────────────
+
+def _copy_overflow_warnings(headline, subline, locale, screen_idx, scene):
+    """Return warning entries for headline/subline that exceed ASC-friendly budgets."""
+    warnings = []
+    label = f"{locale} #{screen_idx + 1:02d}" + (f" '{scene}'" if scene else "")
+    if len(headline) > HEADLINE_MAX_CHARS:
+        warnings.append({
+            "kind": "headline-overflow",
+            "locale": locale,
+            "index": screen_idx,
+            "scene": scene,
+            "length": len(headline),
+            "limit": HEADLINE_MAX_CHARS,
+        })
+        print(f"  ⚠ {label}: headline {len(headline)}ch > {HEADLINE_MAX_CHARS}", file=sys.stderr)
+    if len(subline) > SUBLINE_MAX_CHARS:
+        warnings.append({
+            "kind": "subline-overflow",
+            "locale": locale,
+            "index": screen_idx,
+            "scene": scene,
+            "length": len(subline),
+            "limit": SUBLINE_MAX_CHARS,
+        })
+        print(f"  ⚠ {label}: subline {len(subline)}ch > {SUBLINE_MAX_CHARS}", file=sys.stderr)
+    return warnings
+
+
 # ─── Main Pipeline ──────────────────────────────────────────────────
 
 def generate(
@@ -559,6 +628,9 @@ def generate(
 
     output_base = Path(output_dir)
     total = 0
+    overflow_warnings = []
+    review_flags = []
+    seen_overflow_keys = set()
 
     for locale in locales:
         copy_data = _load_copy(copy_path, locale) if copy_path else []
@@ -576,11 +648,33 @@ def generate(
             for idx, capture_file in enumerate(captures):
                 # Get copy for this screenshot
                 if idx < len(copy_data):
-                    headline = copy_data[idx].get("headline", app_name)
-                    subline = copy_data[idx].get("subline", "")
+                    entry = copy_data[idx]
+                    headline = entry.get("headline", app_name)
+                    subline = entry.get("subline", "")
+                    scene = entry.get("scene", "")
+                    needs_review = bool(entry.get("review", False))
                 else:
                     headline = app_name
                     subline = ""
+                    scene = ""
+                    needs_review = False
+
+                # Warn once per (locale, index) even if we render multiple devices
+                overflow_key = (locale, idx)
+                if overflow_key not in seen_overflow_keys:
+                    overflow_warnings.extend(
+                        _copy_overflow_warnings(headline, subline, locale, idx, scene)
+                    )
+                    if needs_review:
+                        label = f"{locale} #{idx + 1:02d}" + (f" '{scene}'" if scene else "")
+                        print(f"  ⚑ {label}: marked for review", file=sys.stderr)
+                        review_flags.append({
+                            "locale": locale,
+                            "index": idx,
+                            "scene": scene,
+                            "headline": headline,
+                        })
+                    seen_overflow_keys.add(overflow_key)
 
                 # Load raw screenshot
                 try:
@@ -614,8 +708,17 @@ def generate(
 
                 print(f"  [{locale}/{device_key}] {out_name}")
 
+    if overflow_warnings:
+        print(f"\n{len(overflow_warnings)} copy overflow warning(s) — see stderr.", file=sys.stderr)
+    if review_flags:
+        print(f"{len(review_flags)} screenshot(s) flagged for review.", file=sys.stderr)
+
     print(f"\nDone. Generated {total} screenshot(s) in {output_dir}")
-    return total
+    return {
+        "total": total,
+        "overflow_warnings": overflow_warnings,
+        "review_flags": review_flags,
+    }
 
 
 def main():
@@ -660,6 +763,16 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Validate palette / frame color against the current data files.
+    _validate_choice(
+        "--palette", args.palette, _load_palette_names(),
+        context="run 'shotkit palettes' to list available palettes",
+    )
+    _validate_choice(
+        "--frame-color", args.frame_color, _load_frame_color_names(),
+        context="run 'shotkit frame-colors' to list available colors",
+    )
 
     generate(
         app_name=args.app_name,
