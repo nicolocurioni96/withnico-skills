@@ -27,6 +27,7 @@ brew install shotkit
 
 Then use the `shotkit` CLI directly:
 ```bash
+shotkit doctor                                            # verify environment before you start
 shotkit init                                              # connect to App Store Connect
 shotkit capture --bundle-id com.app.id --deeplinks "..."  # auto-capture from Simulator
 shotkit generate --app-name "MyApp" --template trending   # generate with trending styles
@@ -113,6 +114,8 @@ shotkit generate --app-name "MyApp" --captures ./raw --template bold --frame dev
 
 Frames include Dynamic Island, side buttons, and accurate corner radii. Run `shotkit frame-colors` to list all options.
 
+> **Note on device likenesses.** Shotkit renders stylised bezels programmatically — it does not embed real Apple product photography. When shipping to the App Store, follow Apple's [Marketing Resources & Identity Guidelines](https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html) on how iPhone, iPad, and other Apple product silhouettes may be used in your creatives.
+
 **Device support (2025/2026):**
 - iPhone 6.9" — 1320 × 2868 px ✅ mandatory
 - iPhone 6.7" — 1290 × 2796 px
@@ -136,7 +139,7 @@ shotkit update --dir ./screenshots-output   # replace existing screenshots
 - macOS only
 - Xcode installed (for Simulator capture)
 - Python 3.8+ (auto-detected)
-- Pillow, PyJWT, cryptography (auto-installed)
+- Pillow, PyJWT, cryptography — auto-installed into an isolated venv at `~/.shotkit/venv`. Set `SHOTKIT_LEGACY_INSTALL=1` before `shotkit install-deps` to keep the pre-2.1 behaviour of installing into system Python.
 - App Store Connect API key (for upload/download — [create one here](https://appstoreconnect.apple.com/access/integrations/api))
 
 **Quick start:**
@@ -171,6 +174,33 @@ shotkit upload --dir ./screenshots-output
 - Native App Store Connect integration — upload, download, update
 - Multi-device, multi-locale support
 - ASC-ready folder structure with validation
+
+---
+
+## Troubleshooting
+
+**`shotkit doctor` first.** It reports which of Python, Pillow, PyJWT, cryptography, xcrun, a booted Simulator, and `.shotkit.json` are present, and prints a targeted hint for each miss.
+
+**Simulator won't boot.** Verify the device name matches an installed runtime:
+```bash
+xcrun simctl list devices available
+```
+Pass the exact name to `--devices-sim`, e.g. `--devices-sim "iPhone 16 Pro Max"`. If the runtime is missing, install it in Xcode → Settings → Platforms.
+
+**Deep link isn't recognised.** Confirm the URL scheme is registered in your app's Info.plist (`CFBundleURLTypes`) and that the app is already installed and launched at least once on the target Simulator. Test the deep link manually first:
+```bash
+xcrun simctl openurl booted "myapp://home"
+```
+
+**Upload fails with 403.** The API key needs the **Developer** or **App Manager** role in App Store Connect → Users and Access → Keys. The key you generated must have access to the app you selected during `shotkit init`.
+
+**Upload fails with "alpha channel not permitted".** App Store Connect rejects PNGs with transparency. Run `shotkit validate --dir ./screenshots-output` — v2.2 flags this as a warning; flatten the offending PNGs (open in Preview, export as PNG without alpha) and re-upload.
+
+**Python packages not found.** If Homebrew isn't managing shotkit for you, run:
+```bash
+shotkit install-deps
+```
+That creates `~/.shotkit/venv` and installs Pillow, PyJWT, and cryptography there. To force the pre-2.1 behaviour of installing into system Python, prefix with `SHOTKIT_LEGACY_INSTALL=1`.
 
 ---
 

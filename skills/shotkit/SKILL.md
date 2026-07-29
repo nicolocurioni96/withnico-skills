@@ -73,14 +73,21 @@ If the developer chooses option A, also ask:
 
 ---
 
-### Step 2 — Install Dependencies
+### Step 2 — Install Dependencies and Run Doctor
 
 Run the dependency installer:
 ```bash
-bash skills/shotkit/scripts/install_deps.sh
+shotkit install-deps
 ```
 
-This checks for Python 3, installs Pillow, and verifies xcrun is available.
+By default this creates an isolated virtualenv at `~/.shotkit/venv` and installs Pillow, PyJWT, and cryptography there. The `shotkit` CLI auto-detects the venv, so the user's system Python is left untouched. Set `SHOTKIT_LEGACY_INSTALL=1` before running to fall back to installing into system Python.
+
+Then run the environment check:
+```bash
+shotkit doctor
+```
+
+`shotkit doctor` verifies Python, the required packages, xcrun, whether a Simulator is booted, and (if present) the `.shotkit.json` config plus the `.p8` private key path. It exits non-zero only when a required check fails; missing optional pieces (booted simulator, ASC config) are surfaced but don't fail the run.
 
 ---
 
@@ -155,6 +162,9 @@ Rules:
 - Sublines: max 60 characters, benefit-focused
 - Adapt tone per locale (formal for de/ja, casual for en-US)
 - One entry per screenshot, matched by index to the capture files
+- Add `"review": true` on any entry that makes a subjective, superlative, or legal-sensitive claim ("best", "fastest", "certified", pricing, medical, financial). `generate` prints these on stderr and includes them in the run report so they can't ship unnoticed.
+
+When `generate` runs, it also warns on stderr for any headline or subline that overflows the 30- / 60-character budget in a given locale (translations often blow past English lengths); these overflow warnings are recorded in the run report.
 
 Save as `copy.json` in the project root or a path the developer specifies.
 
@@ -203,11 +213,19 @@ The trending template uses curated color palettes and layouts based on top-chart
 shotkit validate --dir ./screenshots-output
 ```
 
+Or emit a machine-readable report:
+```bash
+shotkit validate --dir ./screenshots-output --json                    # to stdout
+shotkit validate --dir ./screenshots-output --report ./run.json       # to a file
+```
+
 Checks:
-- All screenshots match required device dimensions
-- Max 10 per device per locale
-- Files are valid PNG/JPEG
-- Generates a pass/fail report
+- Recognised device folder keys (see `references/device_specs.md`)
+- Portrait or landscape dimensions match the current Apple spec (marked by `spec_version` in the report)
+- Files are readable, and PNG/JPEG magic bytes match the extension
+- No PNG carries an alpha channel (App Store Connect rejects those on upload)
+- No empty per-device folders, and no folder over the 10-image limit
+- Generates a pass/fail summary; magic-byte and alpha-channel checks are warnings in v2.2 and are scheduled to become errors in v2.3.
 
 ---
 
@@ -251,10 +269,11 @@ shotkit screenshots \
   --deeplinks "myapp://home,myapp://detail,myapp://settings" \
   --screens "home,detail,settings" \
   --devices iphone-6.9 \
-  --locales en-US
+  --locales en-US \
+  --report ./run.json
 ```
 
-This runs capture + generate + validate in sequence.
+This runs capture + generate + validate in sequence. Pass `--report FILE` to write a JSON summary at the end — same schema as `shotkit validate --json`, useful for CI or for stashing an audit trail per release.
 
 ---
 

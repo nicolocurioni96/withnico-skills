@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on shotkit shell scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './skills/shotkit/scripts'
+          severity: warning
+          additional_files: 'shotkit'
+
+  smoke:
+    name: shotkit CLI smoke test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install shotkit dependencies (isolated venv)
+        run: bash skills/shotkit/scripts/install_deps.sh
+
+      - name: shotkit --version
+        run: bash skills/shotkit/scripts/shotkit --version
+
+      - name: shotkit --help
+        run: bash skills/shotkit/scripts/shotkit --help
+
+      - name: shotkit palettes
+        run: bash skills/shotkit/scripts/shotkit palettes
+
+      - name: shotkit frame-colors
+        run: bash skills/shotkit/scripts/shotkit frame-colors
+
+      - name: shotkit doctor (may report missing Xcode on runner)
+        run: bash skills/shotkit/scripts/shotkit doctor || true
+
+      - name: Reject unknown --palette
+        run: |
+          if bash skills/shotkit/scripts/shotkit generate \
+              --app-name TestApp \
+              --captures ./skills/shotkit/references \
+              --template trending \
+              --palette not-a-real-palette \
+              --output /tmp/out; then
+            echo "expected failure but generate succeeded"
+            exit 1
+          fi
