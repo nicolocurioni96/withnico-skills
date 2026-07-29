@@ -32,6 +32,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Deprecated
 - The system-Python install path in `install_deps.sh` (`pip3 install --break-system-packages`). Available in v2.2.x behind `SHOTKIT_LEGACY_INSTALL=1`; slated for removal in v3.0.0.
 
+## [2.1.0] — 2026-03-18
+
+### Added
+- **GitHub Sponsors** — added `FUNDING.yml` for the GitHub Sponsors sidebar widget.
+- **Shields.io badges** — release, stars, license, Python, Homebrew, platform, and sponsor badges in README.
+
+### Changed
+- **README banner** — replaced banner image and removed standalone logo icon for a cleaner header.
+
+### Fixed
+- **Bash argument passing** — use bash arrays for argument passing in `shotkit screenshots` command to prevent word-splitting issues.
+- **Homebrew formula** — handle empty `assets/fonts` directory; updated release tarball sha256 for v2.0.0.
+
+### Infrastructure
+- **`.gitignore`** — added Python and Shotkit-specific entries.
+
 ## [2.0.1] — Unreleased
 
 ### Changed
@@ -46,7 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Notes
 - The Homebrew formula (`Formula/shotkit.rb`) still installs the `v2.0.0` tarball. It will be bumped to `v2.0.1` only when a real `v2.0.1` GitHub release exists so its `sha256` can be recomputed against the published tarball.
 
-## [2.0.0] — 2026-03-16
+## [2.0.0] — 2026-03-18
 
 ### Added
 - **Realistic device frames** — `--frame device` renders iPhone/iPad bezels with Dynamic Island, notch, side buttons, and rounded corners. Supports 6 frame colors: `black-titanium`, `natural-titanium`, `white-titanium`, `desert-titanium`, `space-black`, `silver`. Run `shotkit frame-colors` to list all options.
