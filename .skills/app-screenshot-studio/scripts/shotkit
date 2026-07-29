@@ -215,7 +215,9 @@ HLP
 
     # Step 2: Generate
     echo "Step 2/3: Generating styled screenshots..."
-    GEN_ARGS=(--app-name "$APP_NAME" --captures "$CAPTURES_DIR" --template "$TEMPLATE" --devices $DEVICES_GEN --locales $LOCALES --output "$OUTPUT_DIR" --frame "$FRAME")
+    read -ra DEVICES_GEN_ARR <<< "$DEVICES_GEN"
+    read -ra LOCALES_ARR <<< "$LOCALES"
+    GEN_ARGS=(--app-name "$APP_NAME" --captures "$CAPTURES_DIR" --template "$TEMPLATE" --devices "${DEVICES_GEN_ARR[@]}" --locales "${LOCALES_ARR[@]}" --output "$OUTPUT_DIR" --frame "$FRAME")
     [ -n "$COPY_FILE" ] && GEN_ARGS+=(--copy "$COPY_FILE")
     [ -n "$ICON" ] && GEN_ARGS+=(--icon "$ICON")
     [ -n "$BRAND_COLOR" ] && GEN_ARGS+=(--brand-color "$BRAND_COLOR")
